@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地震活動シミュレーター (Canvas・灰色縁取り版)</title>
+    <title>地震活動シミュレーター </title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -81,6 +81,32 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
+        /* 利用規約モーダルスタイル */
+        #terms-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 3000;
+            display: none; /* 初期状態は非表示 */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .terms-content {
+            background: #222;
+            color: #ccc;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            max-width: 90%;
+            max-height: 90%;
+            width: 700px;
+            overflow-y: auto;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
         .leaflet-popup-content-wrapper {
             background: rgba(30, 30, 30, 0.9);
             color: white;
@@ -101,6 +127,72 @@
 <body>
 
     <div id="map"></div>
+
+    <!-- 利用規約モーダル -->
+    <div id="terms-modal">
+        <div class="terms-content">
+            <h2 class="text-2xl font-bold text-white mb-4">地震活動シミュレーター 利用規約</h2>
+            <div class="text-sm space-y-4">
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第1条（本規約の適用）</h3>
+                    <p>本規約は、[地震活動シミュレーター]（以下「本サイト」という）の管理者である気象・防災チャンネル〈X〉（以下「管理者」という）が提供する本サイトの利用に関する一切の行為に適用されます。</p>
+                    <p>利用者は、本サイトの利用を開始した時点で、本規約のすべての内容に同意したものとみなします。</p>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第2条（本サイトの目的と免責事項）</h3>
+                    <p>本サイトは、基本的に特定の地域における地震活動の傾向を理解するための教育および研究目的のシミュレーションツールとして提供されます。</p>
+                    <p>管理者は、本サイトで提供するデータの正確性、完全性、最新性、有用性、および利用者の特定の目的に対する適合性について、一切保証しません。</p>
+                    <p>利用者が本サイトの利用によって被ったいかなる損害（データの誤り、サイトの停止、第三者との紛争等を含むがこれらに限らない）についても、管理者は一切の責任を負いません。</p>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第3条（知的財産権）</h3>
+                    <p>本サイトを構成するすべての要素（プログラム、デザイン、図、画像、データ構造、テキスト等）に関する著作権、特許権、商標権、その他一切の知的財産権は、管理者または管理者に利用を許諾した権利者に帰属します。</p>
+                    <p>利用者は、本サイトの内容を私的利用の範囲を超えて、無断で複製、改変、公衆送信、その他の利用をすることはできません。</p>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第4条（禁止事項）</h3>
+                    <p>利用者は、本サイトの利用にあたり、以下の行為を行ってはなりません。</p>
+                    <ul class="list-disc ml-6 space-y-1 mt-2">
+                        <li><span class="font-semibold">サイトに過度な負担をかける行為</span>
+                            <ul class="list-disc ml-6 text-xs text-gray-400">
+                                <li>本サイトのサーバーまたはネットワークに過度な負荷をかける行為。</li>
+                                <li>ロボット、クローラー、その他の自動化ツールを用いて、サイトのデータを大量に、または継続的に取得する行為（スクレイピング）。</li>
+                                <li>本サイトの運営を妨害する行為、またはそのおそれのある行為。</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-semibold">権利侵害および違法行為</span>
+                            <ul class="list-disc ml-6 text-xs text-gray-400">
+                                <li>他者または管理者の著作権、商標権、プライバシー権、肖像権、その他の権利を侵害する行為。</li>
+                                <li>法令、公序良俗に反する行為、またはそのおそれのある行為。</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-semibold">動画コンテンツの無断利用</span>
+                            <p class="text-xs text-gray-400">本サイトのシミュレーション画面を撮影または録画した動画コンテンツを、管理者の運営する気象・防災チャンネル（https://x.com/kisho_bousai）を含む管理者に対し、事前の承諾を得ることなく、SNS、動画共有サイト、その他の媒体にアップロードし公開する行為。（※注：個人での非営利な教育・研究目的での画面提示はこの限りではない。）</p>
+                        </li>
+                        <li>その他本サイトの趣旨に照らして管理者が不適切と判断する行為。</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第5条（規約違反への対応）</h3>
+                    <p>管理者は、利用者が本規約に違反した場合、または違反するおそれがあると判断した場合、事前の通知なしに、当該利用者に対する本サイトの利用を停止し、またはアクセスを禁止する措置を講じることができます。</p>
+                    <p>前項の措置により利用者に生じた損害について、管理者は一切の責任を負いません。</p>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第6条（本規約の変更）</h3>
+                    <p>管理者は、必要と判断した場合、利用者に事前に通知することなく本規約をいつでも変更することができます。</p>
+                    <p>本規約の変更後、利用者が本サイトを利用した場合、変更後の規約に同意したものとみなします。</p>
+                </section>
+                <section>
+                    <h3 class="font-bold text-lg text-blue-400">第7条（準拠法および管轄）</h3>
+                    <p>本規約の解釈は日本法に準拠するものとします。</p>
+                    <p>本サイトの利用に関して利用者と管理者の間に紛争が生じた場合、東京地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
+                </section>
+            </div>
+            <button onclick="document.getElementById('terms-modal').style.display = 'none'" class="mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
+                閉じる
+            </button>
+        </div>
+    </div>
 
     <!-- ファイルアップロード画面 -->
     <div id="upload-overlay">
@@ -173,6 +265,14 @@
             </button>
         </div>
     </div>
+    
+    <!-- UI: 利用規約ボタン -->
+    <div class="absolute bottom-6 right-4 z-[1000]">
+        <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
+            利用規約
+        </button>
+    </div>
+
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
