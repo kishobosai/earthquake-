@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地震活動シミュレーター (外部ファイル読み込み版)</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Noto Sans JP) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #2b2b2b; /* 真っ黒(1a1a1a)より少し明るいダークグレー */
+            color: #ffffff;
+        }
+
+        #map {
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            background-color: #262626;
+        }
+
+        /* 地図タイルの調整: ダークモードを少し明るくして見やすく */
+        /* 海域は元々暗いので、陸地が少し明るいグレーになります */
+        .map-tiles {
+            filter: brightness(1.35) contrast(0.95);
+        }
+
+        /* ファイルアップロードオーバーレイ */
+        #upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85); /* ダーク背景 */
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+        
+        #upload-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .upload-box {
+            border: 2px dashed #4b5563;
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            background: rgba(40, 40, 40, 0.6);
+            transition: all 0.3s;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .upload-box:hover, .upload-box.dragover {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* コントロールパネル (ダークモード) */
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+        }
+
+        /* 地震マーカー */
+        .quake-marker {
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .quake-circle {
+            border-radius: 50%;
+            position: absolute;
+            opacity: 0.9;
+            transform: scale(0);
+            transition: opacity 2s ease-out;
+            pointer-events: auto;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .quake-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            opacity: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: rippleEffect 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            0% { width: 0; height: 0; opacity: 0.8; border-width: 4px; }
+            100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
+        }
+
+        /* マグニチュード別色 */
+        /* M8以上: 危険な黒紫 + 強い発光 */
+        .mag-8 { 
+            background-color: #1a0033; /* 黒に近い紫 */
+            color: #1a0033; 
+            box-shadow: 0 0 20px #bc13fe, 0 0 40px #bc13fe; /* 強い発光 */
+            border: 1px solid #e040fb;
+            z-index: 1000;
+        }
+        /* M7以上: 紫 */
+        .mag-7 { background-color: #d500f9; color: #d500f9; }
+        /* M6以上: 赤 */
+        .mag-6 { background-color: #f44336; color: #f44336; }
+        /* M5以上: オレンジ */
+        .mag-5 { background-color: #ff9800; color: #ff9800; }
+        /* M4以上: 黄色 (ダークモード用に戻す) */
+        .mag-4 { background-color: #ffeb3b; color: #ffeb3b; } 
+
+        .leaflet-popup-content-wrapper {
+            background: rgba(30, 30, 30, 0.9);
+            color: white;
+            border-radius: 4px;
+        }
+        .leaflet-popup-tip { background: rgba(30, 30, 30, 0.9); }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -5px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+        
+        /* テキストカラー調整用クラス (ダークモード) */
+        .text-theme-main { color: #ffffff; }
+        .text-theme-sub { color: #9ca3af; }
+        .text-theme-accent { color: #60a5fa; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <!-- ファイルアップロード画面 -->
+    <div id="upload-overlay">
+        <div class="upload-box" id="drop-zone">
+            <div class="text-5xl mb-4">📂</div>
+            <h2 class="text-2xl font-bold mb-2 text-white">CSVファイルをドロップ</h2>
+            <p class="text-gray-400 mb-6 text-sm">またはクリックしてファイルを選択<br>(USGS形式のCSVデータ)</p>
+            
+            <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
+            <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition shadow-lg">
+                ファイルを選択
+            </button>
+            <p class="mt-4 text-xs text-gray-500">※ time, latitude, longitude, depth, mag 列を含む必要があります</p>
+        </div>
+    </div>
+
+    <!-- UI: タイトルと日時 -->
+    <div class="absolute top-4 left-4 z-[1000] glass-panel p-4 rounded-lg max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
+        <h1 class="text-xl font-bold mb-1 text-theme-main">地震活動シミュレーション</h1>
+        <p class="text-xs text-theme-sub mb-2" id="sim-period">データを読み込んでください</p>
+        <div id="date-display" class="text-3xl font-mono font-bold text-white tracking-wider">
+            ----/--/--
+        </div>
+        <div id="time-display" class="text-xl font-mono text-gray-300">
+            --:--
+        </div>
+        <div class="mt-2 text-sm text-theme-sub">
+            表示済地震数: <span id="quake-count">0</span> / <span id="total-count">0</span>
+        </div>
+    </div>
+
+    <!-- UI: 凡例 -->
+    <div class="absolute bottom-8 left-4 z-[1000] glass-panel p-3 rounded-lg text-sm hidden sm:block opacity-0 transition-opacity duration-500" id="legend-panel">
+        <div class="font-bold mb-2 text-theme-main">Magnitude</div>
+        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#1a0033] border border-[#e040fb] mr-2 block shadow-[0_0_10px_#bc13fe]"></span> M8.0+</div>
+        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#d500f9] mr-2 block"></span> M7.0 - 7.9</div>
+        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#f44336] mr-2 block"></span> M6.0 - 6.9</div>
+        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#ff9800] mr-2 block"></span> M5.0 - 5.9</div>
+        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#ffeb3b] mr-2 block"></span> M4.0 - 4.9</div>
+    </div>
+
+    <!-- UI: コントロール -->
+    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] glass-panel p-3 rounded-lg w-[90%] max-w-md flex flex-col gap-2 opacity-0 transition-opacity duration-500" id="control-panel">
+        <div class="w-full">
+            <input type="range" id="time-slider" min="0" max="100" value="0" step="0.01" class="w-full" disabled>
+        </div>
+        <div class="flex justify-between items-center text-sm">
+            <div class="flex gap-2">
+                <button id="btn-reset" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition text-xs" disabled>⏮ Reset</button>
+                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs shadow-md" disabled>▶ Play</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="speed-select" class="text-xs text-theme-sub">速度:</label>
+                <select id="speed-select" class="bg-gray-700 text-white border-none rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
+                    <option value="5000">低速 (1秒=5時間)</option>
+                    <option value="24000">中速 (1秒=1日)</option>
+                    <option value="72000" selected>高速 (1秒=3日)</option>
+                    <option value="168000">超高速 (1秒=1週間)</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-2 pt-2 border-t border-gray-600 flex justify-end">
+            <button id="btn-reload" class="text-xs text-theme-sub hover:text-white flex items-center transition">
+                📂 別のファイルを読み込む
+            </button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // --- データ保持用変数 ---
+        let earthquakeData = [];
+        let START_DATE = new Date();
+        let END_DATE = new Date();
+        let TOTAL_DURATION_MS = 1;
+
+        // --- 地図初期化 ---
+        // デフォルトは日本周辺を表示、データ読み込み後に移動
+        const map = L.map('map', {
+            center: [38, 138], 
+            zoom: 5,
+            zoomControl: false,
+            attributionControl: false
+        });
+
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
+
+        // ダークモードの地図（CartoDB Dark）を使用し、明るさをフィルタで調整
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19,
+            className: 'map-tiles'
+        }).addTo(map);
+
+        // --- アプリ状態 ---
+        const state = {
+            currentTime: 0,
+            isPlaying: false,
+            lastDataIndex: 0,
+            isReady: false
+        };
+
+        // --- CSVパーサー (USGS形式対応) ---
+        function parseFullUSGS_CSV(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            // ヘッダー行を探す（time, latitudeが含まれる行）
+            let startIdx = 0;
+            let foundHeader = false;
+            for(let i=0; i<Math.min(10, lines.length); i++) {
+                if (lines[i].includes('time') && lines[i].includes('latitude')) {
+                    startIdx = i + 1;
+                    foundHeader = true;
+                    break;
+                }
+            }
+            if (!foundHeader) {
+                // ヘッダーが見つからない場合、1行目からデータと仮定
+                startIdx = 0; 
+            }
+
+            const result = [];
+            
+            for(let i=startIdx; i<lines.length; i++) {
+                const line = lines[i];
+                if(!line) continue;
+
+                // 引用符内のカンマを無視してsplit
+                const row = [];
+                let current = '';
+                let inQuote = false;
+                for(let char of line) {
+                    if(char === '"') { inQuote = !inQuote; }
+                    else if(char === ',' && !inQuote) { row.push(current); current = ''; }
+                    else { current += char; }
+                }
+                row.push(current);
+
+                // 最低限必要な列: time(0), lat(1), lng(2), depth(3), mag(4)
+                if(row.length >= 5) {
+                    const d = new Date(row[0]);
+                    const lat = parseFloat(row[1]);
+                    const lng = parseFloat(row[2]);
+                    const depth = parseFloat(row[3]);
+                    const mag = parseFloat(row[4]);
+                    // placeは列数が足りない場合や、位置がずれている場合を考慮して安全に取得
+                    let place = 'Unknown Location';
+                    // USGS標準ではindex 13だが、形式によって異なる場合があるため簡易チェック
+                    if (row[13]) place = row[13].replace(/"/g, '');
+                    
+                    if (!isNaN(d.getTime()) && !isNaN(lat) && !isNaN(lng) && !isNaN(mag)) {
+                        result.push({
+                            id: i,
+                            datetime: d,
+                            lat: lat,
+                            lng: lng,
+                            depth: depth,
+                            mag: mag,
+                            location: place
+                        });
+                    }
+                }
+            }
+            return result.sort((a, b) => a.datetime - b.datetime);
+        }
+
+        // --- ファイル読み込み処理 ---
+        const uploadOverlay = document.getElementById('upload-overlay');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInputOverlay = document.getElementById('file-input-overlay');
+        const infoPanel = document.getElementById('info-panel');
+        const controlPanel = document.getElementById('control-panel');
+        const legendPanel = document.getElementById('legend-panel');
+        const btnReload = document.getElementById('btn-reload');
+
+        function handleFile(file) {
+            if (!file) return;
+            
+            // ローディング表示（簡易）
+            dropZone.innerHTML = '<div class="text-2xl animate-pulse text-blue-400">読み込み中...</div>';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                try {
+                    const newData = parseFullUSGS_CSV(text);
+                    if (newData.length > 0) {
+                        initSimulation(newData);
+                    } else {
+                        alert('有効な地震データが見つかりませんでした。\nUSGS形式のCSVか確認してください。');
+                        resetUploadUI();
+                    }
+                } catch(err) {
+                    console.error(err);
+                    alert('CSVの読み込みに失敗しました: ' + err);
+                    resetUploadUI();
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetUploadUI() {
+            dropZone.innerHTML = `
+                <div class="text-5xl mb-4">📂</div>
+                <h2 class="text-2xl font-bold mb-2 text-white">CSVファイルをドロップ</h2>
+                <p class="text-gray-400 mb-6 text-sm">またはクリックしてファイルを選択<br>(USGS形式のCSVデータ)</p>
+                <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
+                <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition shadow-lg">
+                    ファイルを選択
+                </button>
+                <p class="mt-4 text-xs text-gray-500">※ time, latitude, longitude, depth, mag 列を含む必要があります</p>
+            `;
+        }
+
+        function initSimulation(data) {
+            earthquakeData = data;
+            START_DATE = data[0].datetime;
+            END_DATE = data[data.length - 1].datetime;
+            TOTAL_DURATION_MS = END_DATE - START_DATE;
+            
+            state.currentTime = START_DATE.getTime();
+            state.lastDataIndex = 0;
+            state.isReady = true;
+
+            // UI更新
+            document.getElementById('total-count').innerText = data.length;
+            document.getElementById('sim-period').innerText = 
+                `${START_DATE.toLocaleDateString()} - ${END_DATE.toLocaleDateString()}`;
+            
+            // コントロール有効化
+            document.getElementById('time-slider').disabled = false;
+            document.getElementById('btn-reset').disabled = false;
+            document.getElementById('btn-play-pause').disabled = false;
+
+            // 地図の中心をデータ範囲に合わせる
+            const lats = data.map(d => d.lat);
+            const lngs = data.map(d => d.lng);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [50, 50] });
+
+            // オーバーレイを隠す
+            uploadOverlay.classList.add('hidden');
+            
+            // パネルを表示
+            infoPanel.classList.remove('opacity-0');
+            controlPanel.classList.remove('opacity-0');
+            legendPanel.classList.remove('opacity-0');
+
+            updateDisplay();
+        }
+
+        // ドラッグ&ドロップイベント
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                handleFile(file);
+            } else {
+                alert('CSVファイルのみ対応しています。');
+            }
+        });
+
+        // ファイル選択イベント
+        document.body.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'file-input-overlay') {
+                const file = e.target.files[0];
+                handleFile(file);
+            }
+        });
+
+        // 再読み込みボタン
+        btnReload.addEventListener('click', () => {
+            pauseSimulation();
+            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            resetUploadUI();
+            uploadOverlay.classList.remove('hidden');
+            state.isReady = false;
+        });
+
+
+        // --- 描画関数 ---
+        function getMagClass(mag) {
+            if (mag >= 8) return 'mag-8'; // M8以上を追加
+            if (mag >= 7) return 'mag-7';
+            if (mag >= 6) return 'mag-6';
+            if (mag >= 5) return 'mag-5';
+            return 'mag-4'; 
+        }
+
+        function addQuakeMarker(quake) {
+            const magClass = getMagClass(quake.mag);
+            // サイズ調整: M8以上は特に大きく
+            const size = Math.max(10, Math.pow(1.7, quake.mag) * 2.5);
+            const halfSize = size / 2;
+
+            const html = `
+                <div class="quake-marker" style="width: ${size}px; height: ${size}px;">
+                    <div class="quake-ripple ${magClass}" style="border-color: currentColor;"></div>
+                    <div class="quake-circle ${magClass}" style="width: 100%; height: 100%;"></div>
+                </div>
+            `;
+
+            const icon = L.divIcon({
+                className: '',
+                html: html,
+                iconSize: [size, size],
+                iconAnchor: [halfSize, halfSize],
+                popupAnchor: [0, -halfSize]
+            });
+
+            const marker = L.marker([quake.lat, quake.lng], { icon: icon })
+                .bindPopup(`
+                    <div style="min-width: 150px;">
+                        <strong style="font-size: 1.1em; color: #fff;">M${quake.mag.toFixed(1)}</strong><br>
+                        <span style="color: #aaa; font-size: 0.8em;">${new Date(quake.datetime).toLocaleString('ja-JP')}</span><br>
+                        <hr style="border-color: #555; margin: 4px 0;">
+                        <span style="color: #ddd;">${quake.location}</span><br>
+                        <span style="color: #bbb;">深さ: ${quake.depth}km</span>
+                    </div>
+                `);
+
+            marker.addTo(map);
+
+            // M8クラスは余韻を長く残す
+            const duration = (quake.mag >= 8) ? 6000 : 3000;
+            
+            setTimeout(() => {
+                if (map.hasLayer(marker)) {
+                    const el = marker.getElement();
+                    if (el) {
+                        el.style.transition = 'opacity 1s';
+                        el.style.opacity = '0';
+                    }
+                    setTimeout(() => { map.removeLayer(marker); }, 1000);
+                }
+            }, duration);
+        }
+
+        const dateDisplay = document.getElementById('date-display');
+        const timeDisplay = document.getElementById('time-display');
+        const slider = document.getElementById('time-slider');
+        const quakeCountDisplay = document.getElementById('quake-count');
+
+        function updateDisplay() {
+            if (!state.isReady) return;
+
+            const currentObj = new Date(state.currentTime);
+            dateDisplay.innerText = currentObj.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+            timeDisplay.innerText = currentObj.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            
+            if (!isDraggingSlider) {
+                const progress = (state.currentTime - START_DATE.getTime()) / TOTAL_DURATION_MS * 100;
+                slider.value = progress || 0;
+            }
+            quakeCountDisplay.innerText = state.lastDataIndex;
+        }
+
+        // --- アニメーションループ ---
+        let lastFrameTime = 0;
+        let animationFrameId = null;
+
+        function loop(timestamp) {
+            if (!lastFrameTime) lastFrameTime = timestamp;
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+
+            if (state.isPlaying && state.isReady) {
+                const speedVal = parseInt(document.getElementById('speed-select').value); 
+                
+                let simSecondsPerRealSec = 3600 * 24; 
+                
+                if (speedVal === 5000) simSecondsPerRealSec = 3600 * 5;
+                else if (speedVal === 24000) simSecondsPerRealSec = 3600 * 24;
+                else if (speedVal === 72000) simSecondsPerRealSec = 3600 * 72;
+                else if (speedVal === 168000) simSecondsPerRealSec = 3600 * 24 * 7;
+
+                const advanceMs = (simSecondsPerRealSec * 1000) * (deltaTime / 1000);
+                state.currentTime += advanceMs;
+
+                if (state.currentTime >= END_DATE.getTime()) {
+                    state.currentTime = END_DATE.getTime();
+                    pauseSimulation();
+                }
+
+                checkAndDrawQuakes();
+                updateDisplay();
+            }
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        function checkAndDrawQuakes() {
+            while (state.lastDataIndex < earthquakeData.length) {
+                const quake = earthquakeData[state.lastDataIndex];
+                if (quake.datetime.getTime() <= state.currentTime) {
+                    addQuakeMarker(quake);
+                    state.lastDataIndex++;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // --- 制御系 ---
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const btnReset = document.getElementById('btn-reset');
+        let isDraggingSlider = false;
+
+        function startSimulation() {
+            if (!state.isReady) return;
+            state.isPlaying = true;
+            btnPlayPause.innerText = '⏸ Pause';
+            btnPlayPause.classList.remove('bg-blue-600', 'hover:bg-blue-500');
+            btnPlayPause.classList.add('bg-orange-600', 'hover:bg-orange-500');
+            lastFrameTime = 0;
+        }
+
+        function pauseSimulation() {
+            state.isPlaying = false;
+            btnPlayPause.innerText = '▶ Play';
+            btnPlayPause.classList.remove('bg-orange-600', 'hover:bg-orange-500');
+            btnPlayPause.classList.add('bg-blue-600', 'hover:bg-blue-500');
+        }
+
+        btnPlayPause.addEventListener('click', () => {
+            state.isPlaying ? pauseSimulation() : startSimulation();
+        });
+
+        btnReset.addEventListener('click', () => {
+            pauseSimulation();
+            state.currentTime = START_DATE.getTime();
+            state.lastDataIndex = 0;
+            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            updateDisplay();
+            slider.value = 0;
+        });
+
+        slider.addEventListener('mousedown', () => { isDraggingSlider = true; pauseSimulation(); });
+        slider.addEventListener('touchstart', () => { isDraggingSlider = true; pauseSimulation(); });
+        slider.addEventListener('input', (e) => {
+            if (!state.isReady) return;
+            const val = parseFloat(e.target.value);
+            state.currentTime = START_DATE.getTime() + (TOTAL_DURATION_MS * (val / 100));
+            
+            state.lastDataIndex = 0;
+            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            
+            for (let i = 0; i < earthquakeData.length; i++) {
+                if (earthquakeData[i].datetime.getTime() <= state.currentTime) {
+                    state.lastDataIndex = i + 1;
+                } else {
+                    break;
+                }
+            }
+            updateDisplay();
+        });
+        slider.addEventListener('mouseup', () => { isDraggingSlider = false; });
+        slider.addEventListener('touchend', () => { isDraggingSlider = false; });
+
+        // アニメーション開始
+        animationFrameId = requestAnimationFrame(loop);
+
+    </script>
+</body>
+</html>
