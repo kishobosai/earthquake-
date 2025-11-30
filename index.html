@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地震活動シミュレーター (外部ファイル読み込み版)</title>
+    <title>地震活動シミュレーター (Canvas・灰色縁取り版)</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -20,7 +20,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #2b2b2b; /* 真っ黒(1a1a1a)より少し明るいダークグレー */
+            background-color: #1a1a1a;
             color: #ffffff;
         }
 
@@ -28,13 +28,12 @@
             width: 100vw;
             height: 100vh;
             z-index: 1;
-            background-color: #262626;
+            background-color: #111;
         }
 
-        /* 地図タイルの調整: ダークモードを少し明るくして見やすく */
-        /* 海域は元々暗いので、陸地が少し明るいグレーになります */
-        .map-tiles {
-            filter: brightness(1.35) contrast(0.95);
+        /* 地図タイルの明るさを調整 */
+        .leaflet-tile-pane {
+            filter: brightness(1.25) contrast(0.95);
         }
 
         /* ファイルアップロードオーバーレイ */
@@ -44,7 +43,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85); /* ダーク背景 */
+            background: rgba(0, 0, 0, 0.85);
             z-index: 2000;
             display: flex;
             flex-direction: column;
@@ -63,11 +62,10 @@
             border-radius: 1rem;
             padding: 3rem;
             text-align: center;
-            background: rgba(40, 40, 40, 0.6);
+            background: rgba(30, 30, 30, 0.5);
             transition: all 0.3s;
             max-width: 90%;
             width: 500px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .upload-box:hover, .upload-box.dragover {
@@ -75,69 +73,13 @@
             background: rgba(59, 130, 246, 0.1);
         }
 
-        /* コントロールパネル (ダークモード) */
+        /* コントロールパネル */
         .glass-panel {
             background: rgba(30, 30, 30, 0.85);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            color: #ffffff;
         }
-
-        /* 地震マーカー */
-        .quake-marker {
-            background: transparent;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-        }
-
-        .quake-circle {
-            border-radius: 50%;
-            position: absolute;
-            opacity: 0.9;
-            transform: scale(0);
-            transition: opacity 2s ease-out;
-            pointer-events: auto;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .quake-ripple {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid currentColor;
-            opacity: 0;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: rippleEffect 1.5s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes rippleEffect {
-            0% { width: 0; height: 0; opacity: 0.8; border-width: 4px; }
-            100% { width: 300%; height: 300%; opacity: 0; border-width: 0px; }
-        }
-
-        /* マグニチュード別色 */
-        /* M8以上: 危険な黒紫 + 強い発光 */
-        .mag-8 { 
-            background-color: #1a0033; /* 黒に近い紫 */
-            color: #1a0033; 
-            box-shadow: 0 0 20px #bc13fe, 0 0 40px #bc13fe; /* 強い発光 */
-            border: 1px solid #e040fb;
-            z-index: 1000;
-        }
-        /* M7以上: 紫 */
-        .mag-7 { background-color: #d500f9; color: #d500f9; }
-        /* M6以上: 赤 */
-        .mag-6 { background-color: #f44336; color: #f44336; }
-        /* M5以上: オレンジ */
-        .mag-5 { background-color: #ff9800; color: #ff9800; }
-        /* M4以上: 黄色 (ダークモード用に戻す) */
-        .mag-4 { background-color: #ffeb3b; color: #ffeb3b; } 
 
         .leaflet-popup-content-wrapper {
             background: rgba(30, 30, 30, 0.9);
@@ -154,11 +96,6 @@
             width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px;
         }
         input[type=range]:focus { outline: none; }
-        
-        /* テキストカラー調整用クラス (ダークモード) */
-        .text-theme-main { color: #ffffff; }
-        .text-theme-sub { color: #9ca3af; }
-        .text-theme-accent { color: #60a5fa; }
     </style>
 </head>
 <body>
@@ -169,40 +106,45 @@
     <div id="upload-overlay">
         <div class="upload-box" id="drop-zone">
             <div class="text-5xl mb-4">📂</div>
-            <h2 class="text-2xl font-bold mb-2 text-white">CSVファイルをドロップ</h2>
-            <p class="text-gray-400 mb-6 text-sm">またはクリックしてファイルを選択<br>(USGS形式のCSVデータ)</p>
+            <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
+            <p class="text-gray-400 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
             
             <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
-            <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition shadow-lg">
+            <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition">
                 ファイルを選択
             </button>
-            <p class="mt-4 text-xs text-gray-500">※ time, latitude, longitude, depth, mag 列を含む必要があります</p>
+            <p class="mt-4 text-xs text-gray-500">※ Googleスプレッドシート等で結合したファイルも可</p>
         </div>
     </div>
 
     <!-- UI: タイトルと日時 -->
     <div class="absolute top-4 left-4 z-[1000] glass-panel p-4 rounded-lg max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
-        <h1 class="text-xl font-bold mb-1 text-theme-main">地震活動シミュレーション</h1>
-        <p class="text-xs text-theme-sub mb-2" id="sim-period">データを読み込んでください</p>
+        <h1 class="text-xl font-bold mb-1" id="sim-title">地震活動シミュレーション</h1>
+        <p class="text-xs text-gray-400 mb-2" id="sim-period">データを読み込んでください</p>
         <div id="date-display" class="text-3xl font-mono font-bold text-white tracking-wider">
             ----/--/--
         </div>
         <div id="time-display" class="text-xl font-mono text-gray-300">
             --:--
         </div>
-        <div class="mt-2 text-sm text-theme-sub">
+        <div class="mt-2 text-sm text-gray-400">
             表示済地震数: <span id="quake-count">0</span> / <span id="total-count">0</span>
         </div>
     </div>
 
     <!-- UI: 凡例 -->
     <div class="absolute bottom-8 left-4 z-[1000] glass-panel p-3 rounded-lg text-sm hidden sm:block opacity-0 transition-opacity duration-500" id="legend-panel">
-        <div class="font-bold mb-2 text-theme-main">Magnitude</div>
-        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#1a0033] border border-[#e040fb] mr-2 block shadow-[0_0_10px_#bc13fe]"></span> M8.0+</div>
-        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#d500f9] mr-2 block"></span> M7.0 - 7.9</div>
-        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#f44336] mr-2 block"></span> M6.0 - 6.9</div>
-        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#ff9800] mr-2 block"></span> M5.0 - 5.9</div>
-        <div class="flex items-center mb-1 text-theme-sub"><span class="w-4 h-4 rounded-full bg-[#ffeb3b] mr-2 block"></span> M4.0 - 4.9</div>
+        <div class="font-bold mb-2 text-gray-300">Magnitude</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#000000] border border-[#d500f9] mr-2 block shadow-[0_0_8px_rgba(213,0,249,0.8)]"></span> M9.0+</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#d50000] border border-[#000000] mr-2 block shadow-[0_0_5px_rgba(255,23,68,0.5)]"></span> M8.0 - 8.9</div>
+        <!-- 縁取り: 灰色(#808080) -->
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#d500f9] border border-gray-500 mr-2 block"></span> M7.0 - 7.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#f44336] border border-gray-500 mr-2 block"></span> M6.0 - 6.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#ff9800] border border-gray-500 mr-2 block"></span> M5.0 - 5.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#ffeb3b] border border-gray-500 mr-2 block"></span> M4.0 - 4.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#76ff03] border border-gray-500 mr-2 block"></span> M3.0 - 3.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#00e5ff] border border-gray-500 mr-2 block"></span> M2.0 - 2.9</div>
+        <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#2979ff] border border-gray-500 mr-2 block"></span> M1.0 - 1.9</div>
     </div>
 
     <!-- UI: コントロール -->
@@ -213,10 +155,10 @@
         <div class="flex justify-between items-center text-sm">
             <div class="flex gap-2">
                 <button id="btn-reset" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition text-xs" disabled>⏮ Reset</button>
-                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs shadow-md" disabled>▶ Play</button>
+                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs" disabled>▶ Play</button>
             </div>
             <div class="flex items-center gap-2">
-                <label for="speed-select" class="text-xs text-theme-sub">速度:</label>
+                <label for="speed-select" class="text-xs text-gray-400">速度:</label>
                 <select id="speed-select" class="bg-gray-700 text-white border-none rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
                     <option value="5000">低速 (1秒=5時間)</option>
                     <option value="24000">中速 (1秒=1日)</option>
@@ -226,7 +168,7 @@
             </div>
         </div>
         <div class="mt-2 pt-2 border-t border-gray-600 flex justify-end">
-            <button id="btn-reload" class="text-xs text-theme-sub hover:text-white flex items-center transition">
+            <button id="btn-reload" class="text-xs text-gray-400 hover:text-white flex items-center">
                 📂 別のファイルを読み込む
             </button>
         </div>
@@ -243,24 +185,58 @@
         let TOTAL_DURATION_MS = 1;
 
         // --- 地図初期化 ---
-        // デフォルトは日本周辺を表示、データ読み込み後に移動
         const map = L.map('map', {
             center: [38, 138], 
             zoom: 5,
+            minZoom: 1.5,
+            maxBounds: [[-85, -132], [85, 408]],
+            maxBoundsViscosity: 1.0, 
             zoomControl: false,
-            attributionControl: false
+            attributionControl: false,
+            preferCanvas: true 
         });
 
         L.control.zoom({ position: 'topright' }).addTo(map);
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
-        // ダークモードの地図（CartoDB Dark）を使用し、明るさをフィルタで調整
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
-            maxZoom: 19,
-            className: 'map-tiles'
+            maxZoom: 19
         }).addTo(map);
+
+        // --- 高速描画用 Canvas レイヤー ---
+        let canvasEl = null;
+        let ctx = null;
+        let activeQuakes = []; 
+
+        function initCanvas() {
+            if (canvasEl) return;
+            canvasEl = document.createElement('canvas');
+            canvasEl.style.position = 'absolute';
+            canvasEl.style.pointerEvents = 'none'; 
+            canvasEl.style.zIndex = 1000;
+            canvasEl.className = 'leaflet-zoom-animated';
+            map.getPanes().overlayPane.appendChild(canvasEl);
+            ctx = canvasEl.getContext('2d');
+            resizeCanvas();
+            
+            map.on('resize', resizeCanvas);
+            map.on('move', drawCanvas);
+            map.on('zoom', drawCanvas);
+
+            map.getContainer().addEventListener('click', handleMapClick);
+        }
+
+        function resizeCanvas() {
+            if (!canvasEl) return;
+            const size = map.getSize();
+            canvasEl.width = size.x;
+            canvasEl.height = size.y;
+            const topLeft = map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(canvasEl, topLeft);
+            drawCanvas();
+        }
 
         // --- アプリ状態 ---
         const state = {
@@ -270,33 +246,62 @@
             isReady: false
         };
 
-        // --- CSVパーサー (USGS形式対応) ---
-        function parseFullUSGS_CSV(csv) {
+        // --- イージング関数 ---
+        function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+        function easeOutExpo(x) { return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); }
+
+        // --- 色・スタイル定義 (灰色縁取り) ---
+        function getQuakeStyle(mag) {
+            // M9, M8は特別仕様 (変更なし)
+            if (mag >= 9) return { fill: '#000000', stroke: '#d500f9', glow: 'rgba(213, 0, 249, 0.8)', strokeWidth: 2 };
+            if (mag >= 8) return { fill: '#d50000', stroke: '#000000', glow: 'rgba(255, 23, 68, 0.8)', strokeWidth: 5 };
+            
+            // 灰色(#808080)の極細(0.5px)縁取り
+            const commonStroke = '#808080';
+            const commonWidth = 0.5; 
+
+            if (mag >= 7) return { fill: '#d500f9', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            if (mag >= 6) return { fill: '#f44336', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            if (mag >= 5) return { fill: '#ff9800', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            if (mag >= 4) return { fill: '#ffeb3b', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            if (mag >= 3) return { fill: '#76ff03', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            if (mag >= 2) return { fill: '#00e5ff', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+            return { fill: '#2979ff', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
+        }
+
+        // --- 気象庁CSV用 座標パーサー ---
+        function parseJMACoord(str) {
+            if (!str) return NaN;
+            let val = 0;
+            const dms = str.trim().match(/(\d+)°(\d+(\.\d+)?)′([NSEW])/);
+            if (dms) {
+                val = parseFloat(dms[1]) + parseFloat(dms[2]) / 60;
+                if (dms[4] === 'S' || dms[4] === 'W') val = -val;
+            }
+            return val;
+        }
+
+        // --- 気象庁CSVパーサー ---
+        function parseJMA_CSV(csv) {
             const lines = csv.trim().split('\n');
             if (lines.length < 2) return [];
 
-            // ヘッダー行を探す（time, latitudeが含まれる行）
             let startIdx = 0;
-            let foundHeader = false;
-            for(let i=0; i<Math.min(10, lines.length); i++) {
-                if (lines[i].includes('time') && lines[i].includes('latitude')) {
+            let headerFound = false;
+            for(let i=0; i<Math.min(20, lines.length); i++) {
+                if (lines[i].includes('地震の発生日') || lines[i].includes('震央地名')) {
                     startIdx = i + 1;
-                    foundHeader = true;
+                    headerFound = true;
                     break;
                 }
             }
-            if (!foundHeader) {
-                // ヘッダーが見つからない場合、1行目からデータと仮定
-                startIdx = 0; 
-            }
+            if (!headerFound && lines[0].includes('20')) startIdx = 0; 
 
             const result = [];
-            
             for(let i=startIdx; i<lines.length; i++) {
                 const line = lines[i];
-                if(!line) continue;
-
-                // 引用符内のカンマを無視してsplit
+                if(!line || line.trim() === '') continue; 
+                
                 const row = [];
                 let current = '';
                 let inQuote = false;
@@ -307,27 +312,71 @@
                 }
                 row.push(current);
 
-                // 最低限必要な列: time(0), lat(1), lng(2), depth(3), mag(4)
+                if(row.length >= 7) {
+                    if (row[0].includes('発生日')) continue;
+
+                    const dateStr = row[0] + ' ' + row[1];
+                    const d = new Date(dateStr);
+                    
+                    const lat = parseJMACoord(row[3]);
+                    const lng = parseJMACoord(row[4]);
+                    
+                    let depth = 0;
+                    if (row[5].includes('ごく浅い')) depth = 0;
+                    else depth = parseFloat(row[5].replace(' km', ''));
+
+                    let mag = parseFloat(row[6]);
+                    
+                    if (!isNaN(d.getTime()) && !isNaN(lat) && !isNaN(lng) && !isNaN(mag)) {
+                        result.push({
+                            id: i, datetime: d, lat: lat, lng: lng, depth: depth, mag: mag, 
+                            location: row[2], 
+                            style: getQuakeStyle(mag)
+                        });
+                    }
+                }
+            }
+            return result.sort((a, b) => a.datetime - b.datetime);
+        }
+
+        // --- USGS CSVパーサー ---
+        function parseFullUSGS_CSV(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) return [];
+            let startIdx = 0;
+            let foundHeader = false;
+            for(let i=0; i<Math.min(10, lines.length); i++) {
+                if (lines[i].includes('time') && lines[i].includes('latitude')) {
+                    startIdx = i + 1;
+                    foundHeader = true;
+                    break;
+                }
+            }
+            if (!foundHeader) startIdx = 0; 
+            const result = [];
+            for(let i=startIdx; i<lines.length; i++) {
+                const line = lines[i];
+                if(!line) continue;
+                const row = [];
+                let current = '';
+                let inQuote = false;
+                for(let char of line) {
+                    if(char === '"') { inQuote = !inQuote; }
+                    else if(char === ',' && !inQuote) { row.push(current); current = ''; }
+                    else { current += char; }
+                }
+                row.push(current);
                 if(row.length >= 5) {
                     const d = new Date(row[0]);
                     const lat = parseFloat(row[1]);
                     const lng = parseFloat(row[2]);
                     const depth = parseFloat(row[3]);
                     const mag = parseFloat(row[4]);
-                    // placeは列数が足りない場合や、位置がずれている場合を考慮して安全に取得
-                    let place = 'Unknown Location';
-                    // USGS標準ではindex 13だが、形式によって異なる場合があるため簡易チェック
-                    if (row[13]) place = row[13].replace(/"/g, '');
-                    
+                    let place = row[13] ? row[13].replace(/"/g, '') : 'Unknown Location';
                     if (!isNaN(d.getTime()) && !isNaN(lat) && !isNaN(lng) && !isNaN(mag)) {
                         result.push({
-                            id: i,
-                            datetime: d,
-                            lat: lat,
-                            lng: lng,
-                            depth: depth,
-                            mag: mag,
-                            location: place
+                            id: i, datetime: d, lat: lat, lng: lng, depth: depth, mag: mag, location: place,
+                            style: getQuakeStyle(mag)
                         });
                     }
                 }
@@ -338,7 +387,6 @@
         // --- ファイル読み込み処理 ---
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
-        const fileInputOverlay = document.getElementById('file-input-overlay');
         const infoPanel = document.getElementById('info-panel');
         const controlPanel = document.getElementById('control-panel');
         const legendPanel = document.getElementById('legend-panel');
@@ -346,40 +394,44 @@
 
         function handleFile(file) {
             if (!file) return;
-            
-            // ローディング表示（簡易）
-            dropZone.innerHTML = '<div class="text-2xl animate-pulse text-blue-400">読み込み中...</div>';
-
+            dropZone.innerHTML = '<div class="text-2xl animate-pulse">読み込み中...</div>';
             const reader = new FileReader();
+            
             reader.onload = function(e) {
                 const text = e.target.result;
                 try {
-                    const newData = parseFullUSGS_CSV(text);
+                    let newData = [];
+                    if (text.includes('地震の発生日') || text.includes('震央地名')) {
+                        newData = parseJMA_CSV(text);
+                    } else {
+                        newData = parseFullUSGS_CSV(text);
+                    }
+
                     if (newData.length > 0) {
                         initSimulation(newData);
                     } else {
-                        alert('有効な地震データが見つかりませんでした。\nUSGS形式のCSVか確認してください。');
+                        alert('有効な地震データが見つかりませんでした。\nUSGSまたは気象庁形式のCSVか確認してください。\n(文字化けしている場合はファイルをUTF-8で保存し直してください)');
                         resetUploadUI();
                     }
                 } catch(err) {
                     console.error(err);
-                    alert('CSVの読み込みに失敗しました: ' + err);
+                    alert('CSV読み込みエラー: ' + err);
                     resetUploadUI();
                 }
             };
-            reader.readAsText(file);
+            reader.readAsText(file); 
         }
 
         function resetUploadUI() {
             dropZone.innerHTML = `
                 <div class="text-5xl mb-4">📂</div>
-                <h2 class="text-2xl font-bold mb-2 text-white">CSVファイルをドロップ</h2>
-                <p class="text-gray-400 mb-6 text-sm">またはクリックしてファイルを選択<br>(USGS形式のCSVデータ)</p>
+                <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
+                <p class="text-gray-400 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
                 <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
-                <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition shadow-lg">
+                <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition">
                     ファイルを選択
                 </button>
-                <p class="mt-4 text-xs text-gray-500">※ time, latitude, longitude, depth, mag 列を含む必要があります</p>
+                <p class="mt-4 text-xs text-gray-500">※ 気象庁データの日本語ヘッダー対応済み</p>
             `;
         }
 
@@ -393,129 +445,193 @@
             state.lastDataIndex = 0;
             state.isReady = true;
 
-            // UI更新
             document.getElementById('total-count').innerText = data.length;
             document.getElementById('sim-period').innerText = 
                 `${START_DATE.toLocaleDateString()} - ${END_DATE.toLocaleDateString()}`;
             
-            // コントロール有効化
             document.getElementById('time-slider').disabled = false;
             document.getElementById('btn-reset').disabled = false;
             document.getElementById('btn-play-pause').disabled = false;
 
-            // 地図の中心をデータ範囲に合わせる
             const lats = data.map(d => d.lat);
             const lngs = data.map(d => d.lng);
-            const minLat = Math.min(...lats);
-            const maxLat = Math.max(...lats);
-            const minLng = Math.min(...lngs);
-            const maxLng = Math.max(...lngs);
-            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [50, 50] });
+            map.fitBounds([[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]], { padding: [50, 50] });
 
-            // オーバーレイを隠す
             uploadOverlay.classList.add('hidden');
-            
-            // パネルを表示
             infoPanel.classList.remove('opacity-0');
             controlPanel.classList.remove('opacity-0');
             legendPanel.classList.remove('opacity-0');
 
+            initCanvas();
             updateDisplay();
         }
 
-        // ドラッグ&ドロップイベント
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
+        // Event Listeners
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
         dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
+            e.preventDefault(); dropZone.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
-            if (file && file.name.endsWith('.csv')) {
-                handleFile(file);
-            } else {
-                alert('CSVファイルのみ対応しています。');
-            }
+            if (file && file.name.endsWith('.csv')) handleFile(file);
         });
-
-        // ファイル選択イベント
         document.body.addEventListener('change', (e) => {
-            if (e.target && e.target.id === 'file-input-overlay') {
-                const file = e.target.files[0];
-                handleFile(file);
-            }
+            if (e.target && e.target.id === 'file-input-overlay') handleFile(e.target.files[0]);
         });
 
-        // 再読み込みボタン
         btnReload.addEventListener('click', () => {
             pauseSimulation();
-            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            activeQuakes = []; 
+            if(ctx) ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
             resetUploadUI();
             uploadOverlay.classList.remove('hidden');
             state.isReady = false;
         });
 
+        // --- 地震追加ロジック ---
+        function addQuakeToActiveList(quake) {
+            if (quake.mag < 1) return;
 
-        // --- 描画関数 ---
-        function getMagClass(mag) {
-            if (mag >= 8) return 'mag-8'; // M8以上を追加
-            if (mag >= 7) return 'mag-7';
-            if (mag >= 6) return 'mag-6';
-            if (mag >= 5) return 'mag-5';
-            return 'mag-4'; 
+            const duration = 1300; 
+            const sizeBase = Math.max(10, Math.pow(1.7, quake.mag) * 2.5);
+
+            activeQuakes.push({
+                data: quake,
+                startTime: performance.now(), 
+                duration: duration,
+                sizeBase: sizeBase,
+                latLng: L.latLng(quake.lat, quake.lng)
+            });
         }
 
-        function addQuakeMarker(quake) {
-            const magClass = getMagClass(quake.mag);
-            // サイズ調整: M8以上は特に大きく
-            const size = Math.max(10, Math.pow(1.7, quake.mag) * 2.5);
-            const halfSize = size / 2;
+        // --- 描画ループ (Canvas) ---
+        function drawCanvas() {
+            if (!ctx || !canvasEl) return;
+            ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
-            const html = `
-                <div class="quake-marker" style="width: ${size}px; height: ${size}px;">
-                    <div class="quake-ripple ${magClass}" style="border-color: currentColor;"></div>
-                    <div class="quake-circle ${magClass}" style="width: 100%; height: 100%;"></div>
-                </div>
-            `;
+            const topLeft = map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(canvasEl, topLeft);
 
-            const icon = L.divIcon({
-                className: '',
-                html: html,
-                iconSize: [size, size],
-                iconAnchor: [halfSize, halfSize],
-                popupAnchor: [0, -halfSize]
-            });
+            const now = performance.now();
+            const deadIndices = [];
 
-            const marker = L.marker([quake.lat, quake.lng], { icon: icon })
-                .bindPopup(`
-                    <div style="min-width: 150px;">
-                        <strong style="font-size: 1.1em; color: #fff;">M${quake.mag.toFixed(1)}</strong><br>
-                        <span style="color: #aaa; font-size: 0.8em;">${new Date(quake.datetime).toLocaleString('ja-JP')}</span><br>
-                        <hr style="border-color: #555; margin: 4px 0;">
-                        <span style="color: #ddd;">${quake.location}</span><br>
-                        <span style="color: #bbb;">深さ: ${quake.depth}km</span>
-                    </div>
-                `);
+            // 描画ループ: 配列の先頭(古い)から末尾(新しい)の順に描画
+            for (let i = 0; i < activeQuakes.length; i++) {
+                const q = activeQuakes[i];
+                const elapsed = now - q.startTime;
 
-            marker.addTo(map);
-
-            // M8クラスは余韻を長く残す
-            const duration = (quake.mag >= 8) ? 6000 : 3000;
-            
-            setTimeout(() => {
-                if (map.hasLayer(marker)) {
-                    const el = marker.getElement();
-                    if (el) {
-                        el.style.transition = 'opacity 1s';
-                        el.style.opacity = '0';
-                    }
-                    setTimeout(() => { map.removeLayer(marker); }, 1000);
+                if (elapsed > q.duration) {
+                    deadIndices.push(i);
+                    continue;
                 }
-            }, duration);
+
+                const point = map.latLngToContainerPoint(q.latLng);
+                if (point.x < -100 || point.y < -100 || point.x > canvasEl.width + 100 || point.y > canvasEl.height + 100) continue;
+
+                // --- アニメーション ---
+                // 波紋
+                const rippleDuration = 1000;
+                if (elapsed < rippleDuration) {
+                    const rippleProgress = elapsed / rippleDuration;
+                    const rippleEase = easeOutCubic(rippleProgress);
+                    const rippleOpacity = 0.3 * (1 - rippleProgress);
+                    
+                    let rippleScaleMax = 3.0;
+                    if (q.data.mag < 7) { rippleScaleMax = 1.5; }
+                    const rippleSize = q.sizeBase * rippleScaleMax * rippleEase;
+                    
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, rippleSize / 2, 0, Math.PI * 2);
+                    
+                    if (q.data.mag >= 9) ctx.fillStyle = '#d500f9';
+                    else if (q.data.mag >= 8) ctx.fillStyle = '#ff1744';
+                    else ctx.fillStyle = q.data.style.fill;
+
+                    ctx.globalAlpha = rippleOpacity;
+                    ctx.fill(); 
+                }
+
+                // 本体
+                let circleScale = 1;
+                let circleOpacity = 0.9;
+
+                const appearDuration = 400; 
+                if (elapsed < appearDuration) {
+                    circleScale = easeOutExpo(elapsed / appearDuration);
+                } 
+                else if (elapsed > q.duration - 500) {
+                    circleOpacity = 0.9 * ((q.duration - elapsed) / 500);
+                }
+
+                if (circleOpacity > 0.01 && circleScale > 0) {
+                    const currentSize = q.sizeBase * circleScale;
+
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, currentSize / 2, 0, Math.PI * 2);
+                    ctx.globalAlpha = circleOpacity;
+                    
+                    // 発光
+                    if (q.data.style.glow) {
+                        ctx.shadowBlur = (q.data.mag >= 8) ? 35 : 15;
+                        ctx.shadowColor = q.data.style.glow;
+                    } else {
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.fillStyle = q.data.style.fill;
+                    ctx.fill();
+
+                    // 縁取り
+                    if (q.data.style.strokeWidth > 0) {
+                        ctx.shadowBlur = 0; 
+                        ctx.lineWidth = q.data.style.strokeWidth;
+                        ctx.strokeStyle = q.data.style.stroke;
+                        ctx.stroke();
+                    }
+                    ctx.shadowBlur = 0; 
+                }
+            }
+            ctx.globalAlpha = 1.0;
+
+            for (let i = deadIndices.length - 1; i >= 0; i--) {
+                activeQuakes.splice(deadIndices[i], 1);
+            }
+        }
+
+        // --- クリック判定 ---
+        function handleMapClick(e) {
+            if (!activeQuakes.length) return;
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+            let closest = null;
+            let minDist = 30; 
+
+            for (let i = activeQuakes.length - 1; i >= 0; i--) {
+                const q = activeQuakes[i];
+                const p = map.latLngToContainerPoint(q.latLng);
+                const dist = Math.sqrt((p.x - clickX) ** 2 + (p.y - clickY) ** 2);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = q;
+                    break;
+                }
+            }
+
+            if (closest) {
+                const quake = closest.data;
+                const depthStr = quake.depth === 0 ? "ごく浅い" : `${quake.depth}km`;
+                L.popup()
+                    .setLatLng(closest.latLng)
+                    .setContent(`
+                        <div style="min-width: 150px; color: #333;">
+                            <strong style="font-size: 1.1em; color: black;">M${quake.mag.toFixed(1)}</strong><br>
+                            <span style="color: #666; font-size: 0.8em;">${new Date(quake.datetime).toLocaleString('ja-JP')}</span><br>
+                            <hr style="border-color: #ccc; margin: 4px 0;">
+                            ${quake.location}<br>
+                            深さ: ${depthStr}
+                        </div>
+                    `)
+                    .openOn(map);
+            }
         }
 
         const dateDisplay = document.getElementById('date-display');
@@ -525,7 +641,6 @@
 
         function updateDisplay() {
             if (!state.isReady) return;
-
             const currentObj = new Date(state.currentTime);
             dateDisplay.innerText = currentObj.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
             timeDisplay.innerText = currentObj.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
@@ -537,9 +652,8 @@
             quakeCountDisplay.innerText = state.lastDataIndex;
         }
 
-        // --- アニメーションループ ---
+        // --- メインループ ---
         let lastFrameTime = 0;
-        let animationFrameId = null;
 
         function loop(timestamp) {
             if (!lastFrameTime) lastFrameTime = timestamp;
@@ -548,9 +662,7 @@
 
             if (state.isPlaying && state.isReady) {
                 const speedVal = parseInt(document.getElementById('speed-select').value); 
-                
                 let simSecondsPerRealSec = 3600 * 24; 
-                
                 if (speedVal === 5000) simSecondsPerRealSec = 3600 * 5;
                 else if (speedVal === 24000) simSecondsPerRealSec = 3600 * 24;
                 else if (speedVal === 72000) simSecondsPerRealSec = 3600 * 72;
@@ -564,17 +676,22 @@
                     pauseSimulation();
                 }
 
-                checkAndDrawQuakes();
+                checkAndAddQuakes();
                 updateDisplay();
             }
-            animationFrameId = requestAnimationFrame(loop);
+
+            if (activeQuakes.length > 0) {
+                drawCanvas();
+            }
+
+            requestAnimationFrame(loop);
         }
 
-        function checkAndDrawQuakes() {
+        function checkAndAddQuakes() {
             while (state.lastDataIndex < earthquakeData.length) {
                 const quake = earthquakeData[state.lastDataIndex];
                 if (quake.datetime.getTime() <= state.currentTime) {
-                    addQuakeMarker(quake);
+                    addQuakeToActiveList(quake);
                     state.lastDataIndex++;
                 } else {
                     break;
@@ -611,7 +728,8 @@
             pauseSimulation();
             state.currentTime = START_DATE.getTime();
             state.lastDataIndex = 0;
-            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            activeQuakes = [];
+            if(ctx) ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
             updateDisplay();
             slider.value = 0;
         });
@@ -624,7 +742,8 @@
             state.currentTime = START_DATE.getTime() + (TOTAL_DURATION_MS * (val / 100));
             
             state.lastDataIndex = 0;
-            map.eachLayer(layer => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            activeQuakes = [];
+            if(ctx) ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
             
             for (let i = 0; i < earthquakeData.length; i++) {
                 if (earthquakeData[i].datetime.getTime() <= state.currentTime) {
@@ -638,8 +757,7 @@
         slider.addEventListener('mouseup', () => { isDraggingSlider = false; });
         slider.addEventListener('touchend', () => { isDraggingSlider = false; });
 
-        // アニメーション開始
-        animationFrameId = requestAnimationFrame(loop);
+        requestAnimationFrame(loop);
 
     </script>
 </body>
