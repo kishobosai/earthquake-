@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地震活動シミュレーター </title>
+    <title>地震活動シミュレーター</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -81,8 +81,8 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
-        /* 利用規約モーダルスタイル */
-        #terms-modal {
+        /* モーダルスタイル (利用規約・プライバシーポリシー共通) */
+        #terms-modal, #privacy-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -95,7 +95,7 @@
             align-items: center;
         }
 
-        .terms-content {
+        .modal-content {
             background: #222;
             color: #ccc;
             border-radius: 0.5rem;
@@ -130,7 +130,7 @@
 
     <!-- 利用規約モーダル -->
     <div id="terms-modal">
-        <div class="terms-content">
+        <div class="modal-content">
             <h2 class="text-2xl font-bold text-white mb-4">地震活動シミュレーター 利用規約</h2>
             <div class="text-sm space-y-4">
                 <section>
@@ -189,6 +189,75 @@
                 </section>
             </div>
             <button onclick="document.getElementById('terms-modal').style.display = 'none'" class="mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <!-- プライバシーポリシーモーダル (新規追加) -->
+    <div id="privacy-modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-white mb-4">プライバシーポリシー</h2>
+            <div class="text-sm space-y-4">
+                <p>[気象・防災チャンネル（X）]（以下「管理者」といいます）は、本サイトの利用者（以下「ユーザー」といいます）の個人情報保護の重要性を認識し、本サイトにおける個人情報およびそれに準ずる情報（以下「ユーザー情報」といいます）の取扱いについて、以下の通りプライバシーポリシー（以下「本ポリシー」といいます）を定めます。</p>
+                
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第1条（収集するユーザー情報と収集方法）</h3>
+                    <p>本サイトでは、主に以下のユーザー情報を収集します。</p>
+                    <ul class="list-disc ml-6 mt-2">
+                        <li><span class="font-semibold">アクセス情報</span><br>
+                        アクセスログ: 本サイトをホスティングするサーバー（GitHub Pagesなど）の仕様に基づき、アクセス元IPアドレス、アクセス日時、ブラウザの種類、リファラー（参照元URL）などの情報が自動的に記録されます。</li>
+                        <li><span class="font-semibold">トラッキング情報（Cookieなど）</span><br>
+                        本サイトでは、アクセス解析やサイト改善を目的として、Cookieを使用する場合があります。Cookieにより、ユーザーの閲覧履歴や利用状況を収集しますが、これには個人を特定できる情報は含まれておりません。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第2条（ユーザー情報を収集・利用する目的）</h3>
+                    <p>管理者がユーザー情報を収集・利用する目的は、以下の通りです。</p>
+                    <ul class="list-disc ml-6 mt-1">
+                        <li>本サイトの安定的な運営、維持管理のため。</li>
+                        <li>本サイトのアクセス状況や利用状況を分析し、品質向上、改善に役立てるため。</li>
+                        <li>本サイトの利用規約に違反する行為を特定し、これに対応するため。</li>
+                        <li>ユーザーからの問い合わせに対応するため。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第3条（個人情報の第三者提供）</h3>
+                    <p>管理者は、法令に基づき開示が許容される場合を除き、あらかじめユーザーの同意を得ることなく、個人情報を第三者に提供することはありません。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第4条（個人情報の管理）</h3>
+                    <p>管理者は、収集したユーザー情報について、適切な安全管理措置を講じ、漏洩、紛失、破壊、改ざんなどの防止に努めます。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第5条（Cookieについて）</h3>
+                    <p>ユーザーは、ご自身のブラウザ設定を変更することにより、Cookieの利用を拒否することができます。ただし、その場合、本サイトの一部の機能が利用できなくなる場合があります。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第6条（プライバシーポリシーの変更）</h3>
+                    <p>管理者は、法令の改正、サービス内容の変更、その他必要と判断した場合、本ポリシーを随時変更することができるものとします。</p>
+                    <p>変更後の本ポリシーは、本サイト上に掲載された時点から効力を生じるものとします。</p>
+                </section>
+
+                <section>
+                    <h3 class="font-bold text-lg text-green-400">第7条（お問い合わせ窓口）</h3>
+                    <p>本ポリシーに関するお問い合わせは、以下の窓口までお願いいたします。</p>
+                    <div class="mt-2 ml-4 p-2 bg-gray-800 rounded">
+                        <p>管理者名: 気象・防災チャンネル</p>
+                        <p>連絡先: <a href="https://x.com/kisho_bousai" target="_blank" class="text-blue-400 hover:underline">https://x.com/kisho_bousai</a></p>
+                    </div>
+                </section>
+
+                <div class="text-right text-gray-500 text-xs mt-4">
+                    制定日：2025年12月1日
+                </div>
+            </div>
+            <button onclick="document.getElementById('privacy-modal').style.display = 'none'" class="mt-6 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
                 閉じる
             </button>
         </div>
@@ -266,11 +335,16 @@
         </div>
     </div>
     
-    <!-- UI: 利用規約ボタン -->
-    <div class="absolute bottom-6 right-4 z-[1000]">
-        <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
-            利用規約
-        </button>
+    <!-- UI: 利用規約・プライバシーポリシーボタン -->
+    <div class="absolute bottom-6 right-4 z-[1000] flex flex-col items-end gap-1">
+        <div class="flex gap-4">
+            <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
+                利用規約
+            </button>
+            <button id="btn-privacy" onclick="document.getElementById('privacy-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
+                プライバシーポリシー
+            </button>
+        </div>
     </div>
 
 
