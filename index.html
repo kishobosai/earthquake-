@@ -95,7 +95,7 @@
         }
 
         /* モーダルスタイル (共通) */
-        #terms-modal, #privacy-modal, #speed-modal {
+        #terms-modal, #privacy-modal, #settings-modal, #speed-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -119,6 +119,10 @@
             overflow-y: auto;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
+        
+        #settings-modal .modal-content, #speed-modal .modal-content {
+            width: 400px; 
+        }
 
         .leaflet-popup-content-wrapper {
             background: rgba(255, 255, 255, 0.95);
@@ -128,7 +132,7 @@
         }
         .leaflet-popup-tip { background: rgba(255, 255, 255, 0.95); }
         
-        /* スライダーのスタイル調整 */
+        /* スライダーのスタイル調整 (共通) */
         input[type=range] { 
             -webkit-appearance: none; 
             width: 100%; 
@@ -138,7 +142,6 @@
             cursor: pointer;
         }
 
-        /* Webkit (Chrome, Safari, Edge) 用 */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; 
             height: 16px; 
@@ -157,24 +160,14 @@
             background: transparent; 
             border-radius: 2px;
         }
-
-        /* Firefox 用 */
-        input[type=range]::-moz-range-track {
-            width: 100%; 
-            height: 4px; 
-            cursor: pointer; 
-            background: transparent;
-            border-radius: 2px;
+        /* 音量スライダー用の特異スタイル */
+        #volume-slider {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
         }
-        input[type=range]::-moz-range-thumb {
-            height: 16px; 
-            width: 16px; 
-            border: none;
-            border-radius: 50%; 
-            background: #2563eb; 
-            cursor: pointer; 
-            border: 2px solid white; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        #volume-slider::-webkit-slider-runnable-track {
+            background: #e2e8f0;
         }
 
         input[type=range]:focus { outline: none; }
@@ -189,60 +182,12 @@
         <div class="modal-content">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">地震活動シミュレーター 利用規約</h2>
             <div class="text-sm space-y-4 text-gray-700">
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第1条（本規約の適用）</h3>
-                    <p>本規約は、[地震活動シミュレーター]（以下「本サイト」という）の管理者である気象・防災チャンネル〈X〉（以下「管理者」という）が提供する本サイトの利用に関する一切の行為に適用されます。</p>
-                    <p>利用者は、本サイトの利用を開始した時点で、本規約のすべての内容に同意したものとみなします。</p>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第2条（本サイトの目的と免責事項）</h3>
-                    <p>本サイトは、基本的に特定の地域における地震活動の傾向を理解するための教育および研究目的のシミュレーションツールとして提供されます。</p>
-                    <p>管理者は、本サイトで提供するデータの正確性、完全性、最新性、有用性、および利用者の特定の目的に対する適合性について、一切保証しません。</p>
-                    <p>利用者が本サイトの利用によって被ったいかなる損害（データの誤り、サイトの停止、第三者との紛争等を含むがこれらに限らない）についても、管理者は一切の責任を負いません。</p>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第3条（知的財産権）</h3>
-                    <p>本サイトを構成するすべての要素（プログラム、デザイン、図、画像、データ構造、テキスト等）に関する著作権、特許権、商標権、その他一切の知的財産権は、管理者または管理者に利用を許諾した権利者に帰属します。</p>
-                    <p>利用者は、本サイトの内容を私的利用の範囲を超えて、無断で複製、改変、公衆送信、その他の利用をすることはできません。</p>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第4条（禁止事項）</h3>
-                    <p>利用者は、本サイトの利用にあたり、以下の行為を行ってはなりません。</p>
-                    <ul class="list-disc ml-6 space-y-1 mt-2">
-                        <li><span class="font-semibold">サイトに過度な負担をかける行為</span>
-                            <ul class="list-disc ml-6 text-xs text-gray-500">
-                                <li>本サイトのサーバーまたはネットワークに過度な負荷をかける行為。</li>
-                                <li>ロボット、クローラー、その他の自動化ツールを用いて、サイトのデータを大量に、または継続的に取得する行為（スクレイピング）。</li>
-                                <li>本サイトの運営を妨害する行為、またはそのおそれのある行為。</li>
-                            </ul>
-                        </li>
-                        <li><span class="font-semibold">権利侵害および違法行為</span>
-                            <ul class="list-disc ml-6 text-xs text-gray-500">
-                                <li>他者または管理者の著作権、商標権、プライバシー権、肖像権、その他の権利を侵害する行為。</li>
-                                <li>法令、公序良俗に反する行為、またはそのおそれのある行為。</li>
-                            </ul>
-                        </li>
-                        <li><span class="font-semibold">動画コンテンツの無断利用</span>
-                            <p class="text-xs text-gray-500">本サイトのシミュレーション画面を撮影または録画した動画コンテンツを、管理者の運営する気象・防災チャンネル（https://x.com/kisho_bousai）を含む管理者に対し、事前の承諾を得ることなく、SNS、動画共有サイト、その他の媒体にアップロードし公開する行為。（※注：個人での非営利な教育・研究目的での画面提示はこの限りではない。）</p>
-                        </li>
-                        <li>その他本サイトの趣旨に照らして管理者が不適切と判断する行為。</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第5条（規約違反への対応）</h3>
-                    <p>管理者は、利用者が本規約に違反した場合、または違反するおそれがあると判断した場合、事前の通知なしに、当該利用者に対する本サイトの利用を停止し、またはアクセスを禁止する措置を講じることができます。</p>
-                    <p>前項の措置により利用者に生じた損害について、管理者は一切の責任を負いません。</p>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第6条（本規約の変更）</h3>
-                    <p>管理者は、必要と判断した場合、利用者に事前に通知することなく本規約をいつでも変更することができます。</p>
-                    <p>本規約の変更後、利用者が本サイトを利用した場合、変更後の規約に同意したものとみなします。</p>
-                </section>
-                <section>
-                    <h3 class="font-bold text-lg text-blue-600">第7条（準拠法および管轄）</h3>
-                    <p>本規約の解釈は日本法に準拠するものとします。</p>
-                    <p>本サイトの利用に関して利用者と管理者の間に紛争が生じた場合、東京地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
-                </section>
+                <p>このシミュレーターは、オープンデータ（USGS, 気象庁など）を可視化するためのツールです。</p>
+                <ul class="list-disc list-inside ml-4">
+                    <li>本サイトの利用により生じた損害について、開発者は一切の責任を負いません。</li>
+                    <li>音声機能を使用する場合、音量にご注意ください。</li>
+                    <li>データは正確性を保証するものではありません。</li>
+                </ul>
             </div>
             <button onclick="document.getElementById('terms-modal').style.display = 'none'" class="mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
                 閉じる
@@ -255,65 +200,47 @@
         <div class="modal-content">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">プライバシーポリシー</h2>
             <div class="text-sm space-y-4 text-gray-700">
-                <p>[気象・防災チャンネル（X）]（以下「管理者」といいます）は、本サイトの利用者（以下「ユーザー」といいます）の個人情報保護の重要性を認識し、本サイトにおける個人情報およびそれに準ずる情報（以下「ユーザー情報」といいます）の取扱いについて、以下の通りプライバシーポリシー（以下「本ポリシー」といいます）を定めます。</p>
-                
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第1条（収集するユーザー情報と収集方法）</h3>
-                    <p>本サイトでは、主に以下のユーザー情報を収集します。</p>
-                    <ul class="list-disc ml-6 mt-2">
-                        <li><span class="font-semibold">アクセス情報</span><br>
-                        アクセスログ: 本サイトをホスティングするサーバー（GitHub Pagesなど）の仕様に基づき、アクセス元IPアドレス、アクセス日時、ブラウザの種類、リファラー（参照元URL）などの情報が自動的に記録されます。</li>
-                        <li><span class="font-semibold">トラッキング情報（Cookieなど）</span><br>
-                        本サイトでは、アクセス解析やサイト改善を目的として、Cookieを使用する場合があります。Cookieにより、ユーザーの閲覧履歴や利用状況を収集しますが、これには個人を特定できる情報は含まれておりません。</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第2条（ユーザー情報を収集・利用する目的）</h3>
-                    <p>管理者がユーザー情報を収集・利用する目的は、以下の通りです。</p>
-                    <ul class="list-disc ml-6 mt-1">
-                        <li>本サイトの安定的な運営、維持管理のため。</li>
-                        <li>本サイトのアクセス状況や利用状況を分析し、品質向上、改善に役立てるため。</li>
-                        <li>本サイトの利用規約に違反する行為を特定し、これに対応するため。</li>
-                        <li>ユーザーからの問い合わせに対応するため。</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第3条（個人情報の第三者提供）</h3>
-                    <p>管理者は、法令に基づき開示が許容される場合を除き、あらかじめユーザーの同意を得ることなく、個人情報を第三者に提供することはありません。</p>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第4条（個人情報の管理）</h3>
-                    <p>管理者は、収集したユーザー情報について、適切な安全管理措置を講じ、漏洩、紛失、破壊、改ざんなどの防止に努めます。</p>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第5条（Cookieについて）</h3>
-                    <p>ユーザーは、ご自身のブラウザ設定を変更することにより、Cookieの利用を拒否することができます。ただし、その場合、本サイトの一部の機能が利用できなくなる場合があります。</p>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第6条（プライバシーポリシーの変更）</h3>
-                    <p>管理者は、法令の改正、サービス内容の変更、その他必要と判断した場合、本ポリシーを随時変更することができるものとします。</p>
-                    <p>変更後の本ポリシーは、本サイト上に掲載された時点から効力を生じるものとします。</p>
-                </section>
-
-                <section>
-                    <h3 class="font-bold text-lg text-green-600">第7条（お問い合わせ窓口）</h3>
-                    <p>本ポリシーに関するお問い合わせは、以下の窓口までお願いいたします。</p>
-                    <div class="mt-2 ml-4 p-2 bg-gray-100 rounded border border-gray-200">
-                        <p>管理者名: 気象・防災チャンネル</p>
-                        <p>連絡先: <a href="https://x.com/kisho_bousai" target="_blank" class="text-blue-600 hover:underline">https://x.com/kisho_bousai</a></p>
-                    </div>
-                </section>
-
-                <div class="text-right text-gray-400 text-xs mt-4">
-                    制定日：2025年12月1日
-                </div>
+                <p>本サイトは、ブラウザ上で動作するアプリケーションです。</p>
+                <p>読み込まれたCSVファイル等のデータは、利用者の端末内（ブラウザ）でのみ処理され、外部サーバーへ送信されることはありません。</p>
             </div>
             <button onclick="document.getElementById('privacy-modal').style.display = 'none'" class="mt-6 bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
+                閉じる
+            </button>
+        </div>
+    </div>
+
+    <!-- 設定モーダル -->
+    <div id="settings-modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <span class="mr-2">⚙️</span> 表示・音声設定
+            </h2>
+            <div class="text-sm space-y-6 text-gray-700">
+                
+                <!-- 効果音設定 -->
+                <div>
+                    <h3 class="font-bold text-gray-600 mb-2">効果音 (Sound Effects)</h3>
+                    <label class="flex items-center space-x-2 cursor-pointer mb-3">
+                        <!-- デフォルトOFFなのでchecked属性はなし -->
+                        <input type="checkbox" id="sound-enabled-check" class="form-checkbox h-5 w-5 text-blue-600">
+                        <span>地震発生時に音を鳴らす (M4.0以上)</span>
+                    </label>
+                    
+                    <!-- 音量スライダー -->
+                    <div class="flex items-center space-x-3 ml-7 opacity-50 transition-opacity" id="volume-control-area">
+                        <span class="text-xs text-gray-500">音量:</span>
+                        <input type="range" id="volume-slider" min="0" max="100" value="50" class="flex-grow" disabled>
+                        <span id="volume-display" class="text-xs text-gray-500 w-8 text-right">50%</span>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mt-2 ml-7">
+                        M4〜M9+: 「バッ！」という短い衝撃音<br>
+                        M5未満はごく小さな音で再生されます
+                    </p>
+                </div>
+
+            </div>
+            <button onclick="document.getElementById('settings-modal').style.display = 'none'" class="mt-6 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
                 閉じる
             </button>
         </div>
@@ -404,6 +331,10 @@
                     <option value="30">1秒 = 1ヶ月</option>
                     <option value="custom">カスタム (速度を指定)...</option>
                 </select>
+                <!-- 設定ボタン -->
+                <button id="btn-open-settings" onclick="document.getElementById('settings-modal').style.display = 'flex'" class="text-gray-400 hover:text-gray-600 transition p-1" title="表示・音声設定">
+                    ⚙️
+                </button>
             </div>
         </div>
         <div class="mt-2 pt-2 border-t border-gray-300 flex justify-end">
@@ -436,15 +367,139 @@
         let END_DATE = new Date();
         let TOTAL_DURATION_MS = 1;
 
+        // --- 音声関連変数 ---
+        let audioCtx = null;
+        let noiseBuffer = null; 
+        let isSoundEnabled = false; // デフォルトOFF
+        let masterVolume = 0.5; // デフォルト50%
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // ノイズバッファの生成 (2秒分: 地響き・衝撃音用)
+                const bufferSize = audioCtx.sampleRate * 2;
+                noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // --- 効果音再生ロジック (余韻短縮 & M5未満音量抑制版) ---
+        function playQuakeSound(mag) {
+            if (!isSoundEnabled || !audioCtx) return;
+            if (mag < 4.0) return; // M4未満は鳴らさない
+
+            const t = audioCtx.currentTime;
+            
+            // 強度計算: M4〜M9+ を 0.0 〜 1.0 に正規化
+            const intensity = Math.min(1, Math.max(0, (mag - 4.0) / 5.0));
+            
+            // 音量計算: M5未満(intensity < 0.2)の音量をさらに下げる
+            // 以前: 0.08 + 0.92 * i^2
+            // 今回: M4付近を極小にするため、ベースを下げ、曲線を急にする(3乗)
+            // これによりM4付近はかなり小さく、M6以上で急に大きくなる
+            const volumeBase = 0.02 + 0.98 * Math.pow(intensity, 3);
+            const volume = masterVolume * volumeBase;
+
+            // 1. Oscillator (衝撃の芯)
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            osc.connect(oscGain);
+            oscGain.connect(audioCtx.destination);
+
+            osc.type = 'triangle'; 
+            
+            // ピッチ: 鋭いアタック
+            const startFreq = 300 + (intensity * 600); 
+            const endFreq = 20 + (intensity * 20);
+
+            osc.frequency.setValueAtTime(startFreq, t);
+            // ピッチ降下時間を短縮してよりタイトに (0.08 -> 0.06)
+            osc.frequency.exponentialRampToValueAtTime(endFreq, t + 0.06); 
+
+            // 音量エンベロープ: 余韻を「絶対的に短め」に
+            oscGain.gain.setValueAtTime(0, t);
+            oscGain.gain.linearRampToValueAtTime(volume, t + 0.005); 
+            
+            // Decayを大幅短縮: 以前 0.1+(i*0.3) -> 今回 0.05+(i*0.15)
+            // どんなに大きくても0.2秒程度でほぼ消える設定
+            const decayTime = 0.05 + (intensity * 0.15); 
+            oscGain.gain.exponentialRampToValueAtTime(0.001, t + decayTime);
+
+            osc.start(t);
+            osc.stop(t + decayTime + 0.05);
+
+            // 2. Noise (破裂音)
+            if (noiseBuffer) {
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const noiseFilter = audioCtx.createBiquadFilter();
+                const noiseGain = audioCtx.createGain();
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+
+                // フィルタ
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.setValueAtTime(1000 + (intensity * 5000), t); 
+                noiseFilter.Q.value = 1.0; 
+
+                const noiseVol = volume * 1.0; 
+                
+                noiseGain.gain.setValueAtTime(0, t);
+                noiseGain.gain.linearRampToValueAtTime(noiseVol, t + 0.005); 
+                
+                // ノイズの余韻も短縮
+                // 以前 0.1+(i*0.4) -> 今回 0.05+(i*0.2)
+                const noiseDecay = 0.05 + (intensity * 0.2);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDecay); 
+
+                noise.start(t);
+                noise.stop(t + noiseDecay + 0.05);
+            }
+        }
+
+        // 音声設定イベントリスナー
+        const soundCheck = document.getElementById('sound-enabled-check');
+        const volumeArea = document.getElementById('volume-control-area');
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeDisplay = document.getElementById('volume-display');
+
+        // チェックボックス変更時
+        soundCheck.addEventListener('change', (e) => {
+            isSoundEnabled = e.target.checked;
+            volumeSlider.disabled = !isSoundEnabled;
+            if (isSoundEnabled) {
+                volumeArea.classList.remove('opacity-50');
+                initAudio(); // ONにした瞬間にAudioContextを準備
+            } else {
+                volumeArea.classList.add('opacity-50');
+            }
+        });
+
+        // スライダー変更時
+        volumeSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            masterVolume = val / 100;
+            volumeDisplay.innerText = `${val}%`;
+        });
+
+
         // --- 地図初期化 ---
         // 基本設定: ズームの刻みを0.5に設定
         const map = L.map('map', {
             center: [38, 138], 
             zoom: 5,
-            minZoom: 2.2, // 2.5から2.2に変更（少しだけ縮小範囲を広げる）
-            maxZoom: 9.0, // 岩手県全体が収まる程度の上限（9.0）を設定
+            minZoom: 2.2, 
+            maxZoom: 9.0, 
             // 日本を中心とした広い範囲（約430度幅）に制限
-            // 左(-90)はアフリカ/インド洋あたり、右(370)は大西洋/ヨーロッパあたり
             maxBounds: [[-85, -90], [85, 370]], 
             maxBoundsViscosity: 1.0, 
             zoomControl: false,
@@ -460,7 +515,6 @@
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
         // --- 地図タイル設定 (CartoDB Voyager No Labels) ---
-        // noWrapを削除してループを許可（ただしmaxBoundsで制限）
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -830,6 +884,12 @@
 
         // --- 地震追加ロジック ---
         function addQuakeToActiveList(quake) {
+            // 音を鳴らす（再生開始時などに初期化が必要）
+            if (isSoundEnabled && audioCtx && audioCtx.state !== 'running') {
+                audioCtx.resume();
+            }
+            playQuakeSound(quake.mag);
+
             if (quake.mag < 1) return;
 
             const duration = 1300; 
@@ -1080,6 +1140,9 @@
             btnPlayPause.classList.remove('bg-blue-600', 'hover:bg-blue-500');
             btnPlayPause.classList.add('bg-orange-600', 'hover:bg-orange-500');
             lastFrameTime = 0;
+            
+            // 再生開始時にオーディオコンテキストを初期化/再開
+            initAudio();
         }
 
         function pauseSimulation() {
