@@ -94,8 +94,8 @@
             color: #333;
         }
 
-        /* モーダルスタイル */
-        #terms-modal, #privacy-modal {
+        /* モーダルスタイル (共通) */
+        #terms-modal, #privacy-modal, #speed-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -319,6 +319,22 @@
         </div>
     </div>
 
+    <!-- 速度設定モーダル -->
+    <div id="speed-modal">
+        <div class="modal-content" style="width: 320px; max-width: 90%;">
+            <h3 class="text-lg font-bold mb-3 text-gray-800">速度をカスタム指定</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                1秒間に進める日数を入力してください。<br>
+                <span class="text-xs text-gray-400">例: 0.5 (半日), 60 (2ヶ月)</span>
+            </p>
+            <input type="number" id="custom-speed-input" class="w-full bg-gray-100 border border-gray-300 rounded px-3 py-2 mb-4 text-gray-800 focus:outline-none focus:border-blue-500" placeholder="日数" step="0.1" min="0.1">
+            <div class="flex justify-end gap-2">
+                <button id="btn-speed-cancel" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-1.5 rounded transition text-sm">キャンセル</button>
+                <button id="btn-speed-ok" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded transition text-sm font-bold">決定</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ファイルアップロード画面 -->
     <div id="upload-overlay">
         <div class="upload-box" id="drop-zone">
@@ -377,11 +393,16 @@
             </div>
             <div class="flex items-center gap-2">
                 <label for="speed-select" class="text-xs text-gray-600">速度:</label>
+                <!-- 速度選択肢 -->
                 <select id="speed-select" class="bg-gray-100 text-gray-800 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
-                    <option value="5000">低速 (1秒=5時間)</option>
-                    <option value="24000">中速 (1秒=1日)</option>
-                    <option value="72000" selected>高速 (1秒=3日)</option>
-                    <option value="168000">超高速 (1秒=1週間)</option>
+                    <option value="0.25">1秒 = 6時間</option>
+                    <option value="1">1秒 = 1日</option>
+                    <option value="3" selected>1秒 = 3日</option>
+                    <option value="7">1秒 = 1週間</option>
+                    <option value="14">1秒 = 2週間</option>
+                    <option value="21">1秒 = 3週間</option>
+                    <option value="30">1秒 = 1ヶ月</option>
+                    <option value="custom">カスタム (速度を指定)...</option>
                 </select>
             </div>
         </div>
@@ -422,7 +443,6 @@
             zoom: 5,
             minZoom: 2.2, // 2.5から2.2に変更（少しだけ縮小範囲を広げる）
             // 日本を中心とした広い範囲（約430度幅）に制限
-            // 左(-90)はアフリカ/インド洋あたり、右(370)は大西洋/ヨーロッパあたり
             maxBounds: [[-85, -90], [85, 370]], 
             maxBoundsViscosity: 1.0, 
             zoomControl: false,
@@ -438,7 +458,6 @@
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
         // --- 地図タイル設定 (CartoDB Voyager No Labels) ---
-        // noWrapを削除してループを許可（ただしmaxBoundsで制限）
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -497,6 +516,9 @@
             lastDataIndex: 0,
             isReady: false
         };
+        
+        // 現在の速度設定 (1秒あたりの日数)
+        let currentSpeedDaysPerSec = 3; 
 
         // --- イージング関数 ---
         function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
@@ -739,6 +761,69 @@
             state.isReady = false;
         });
 
+        // --- 速度変更ロジック (カスタム対応: モーダル使用 + 再選択対応) ---
+        const speedSelect = document.getElementById('speed-select');
+        const speedModal = document.getElementById('speed-modal');
+        const customSpeedInput = document.getElementById('custom-speed-input');
+        const btnSpeedOk = document.getElementById('btn-speed-ok');
+        const btnSpeedCancel = document.getElementById('btn-speed-cancel');
+        let previousSpeedIndex = 2; // デフォルトは "3日" (index 2)
+
+        speedSelect.addEventListener('change', (e) => {
+            const valStr = e.target.value;
+            if (valStr === 'custom') {
+                // シミュレーションを一時停止
+                if(state.isPlaying) pauseSimulation();
+                
+                // モーダルを表示
+                customSpeedInput.value = currentSpeedDaysPerSec; // 現在値をセット
+                customSpeedInput.classList.remove('border-red-500'); // エラー状態リセット
+                speedModal.style.display = 'flex';
+                customSpeedInput.focus();
+            } else if (valStr.startsWith('dynamic:')) {
+                // すでに作成されたカスタム値を選択した場合
+                currentSpeedDaysPerSec = parseFloat(valStr.split(':')[1]);
+                previousSpeedIndex = speedSelect.selectedIndex;
+            } else {
+                currentSpeedDaysPerSec = parseFloat(valStr);
+                previousSpeedIndex = speedSelect.selectedIndex;
+            }
+        });
+
+        btnSpeedCancel.addEventListener('click', () => {
+            speedModal.style.display = 'none';
+            speedSelect.selectedIndex = previousSpeedIndex; // 元の選択に戻す
+        });
+
+        btnSpeedOk.addEventListener('click', () => {
+            const val = parseFloat(customSpeedInput.value);
+            if (!isNaN(val) && val > 0) {
+                currentSpeedDaysPerSec = val;
+                
+                // 既存の動的オプションを探す
+                let dynamicOpt = speedSelect.querySelector('option.dynamic-speed');
+                if (!dynamicOpt) {
+                    dynamicOpt = document.createElement('option');
+                    dynamicOpt.className = 'dynamic-speed';
+                    // "カスタム..." の手前に挿入
+                    speedSelect.insertBefore(dynamicOpt, speedSelect.lastElementChild);
+                }
+                
+                // 値を設定 (prefixをつけて "custom" と区別する)
+                dynamicOpt.value = `dynamic:${val}`;
+                dynamicOpt.text = `カスタム (1秒=${val}日)`;
+                dynamicOpt.selected = true; // これを選択状態にする
+                
+                // 状態更新
+                previousSpeedIndex = speedSelect.selectedIndex;
+                speedModal.style.display = 'none';
+            } else {
+                // エラー表示（赤枠）
+                customSpeedInput.classList.add('border-red-500');
+            }
+        });
+
+
         // --- 地震追加ロジック ---
         function addQuakeToActiveList(quake) {
             if (quake.mag < 1) return;
@@ -945,12 +1030,8 @@
             lastFrameTime = timestamp;
 
             if (state.isPlaying && state.isReady) {
-                const speedVal = parseInt(document.getElementById('speed-select').value); 
-                let simSecondsPerRealSec = 3600 * 24; 
-                if (speedVal === 5000) simSecondsPerRealSec = 3600 * 5;
-                else if (speedVal === 24000) simSecondsPerRealSec = 3600 * 24;
-                else if (speedVal === 72000) simSecondsPerRealSec = 3600 * 72;
-                else if (speedVal === 168000) simSecondsPerRealSec = 3600 * 24 * 7;
+                // 1日 = 24時間 = 86400秒
+                const simSecondsPerRealSec = currentSpeedDaysPerSec * 86400; 
 
                 const advanceMs = (simSecondsPerRealSec * 1000) * (deltaTime / 1000);
                 state.currentTime += advanceMs;
