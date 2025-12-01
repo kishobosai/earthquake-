@@ -420,8 +420,10 @@
         const map = L.map('map', {
             center: [38, 138], 
             zoom: 5,
-            minZoom: 1.5,
-            maxBounds: [[-85, -132], [85, 408]],
+            minZoom: 2.2, // 2.5から2.2に変更（少しだけ縮小範囲を広げる）
+            // 日本を中心とした広い範囲（約430度幅）に制限
+            // 左(-90)はアフリカ/インド洋あたり、右(370)は大西洋/ヨーロッパあたり
+            maxBounds: [[-85, -90], [85, 370]], 
             maxBoundsViscosity: 1.0, 
             zoomControl: false,
             attributionControl: false,
@@ -436,6 +438,7 @@
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
         // --- 地図タイル設定 (CartoDB Voyager No Labels) ---
+        // noWrapを削除してループを許可（ただしmaxBoundsで制限）
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -760,8 +763,7 @@
             const topLeft = map.containerPointToLayerPoint([0, 0]);
             L.DomUtil.setPosition(canvasEl, topLeft);
 
-            // 世界の幅(ピクセル)を計算
-            // 現在のズームレベルにおける経度360度分の幅
+            // 世界の幅(ピクセル)を計算して、左右のコピー世界にも描画する
             const p1 = map.latLngToContainerPoint([0, -180]);
             const p2 = map.latLngToContainerPoint([0, 180]);
             const worldWidth = Math.abs(p2.x - p1.x);
@@ -782,6 +784,7 @@
                 const basePoint = map.latLngToContainerPoint(q.latLng);
 
                 // 世界の繰り返し表示に対応するため、左右のコピー分も含めて描画候補とする
+                // maxBoundsで制限しているため、無限ループではなく画面に見える範囲（主に±1周分）を描画
                 const offsets = [0];
                 if (worldWidth > 0) {
                     // 左側の世界を追加
@@ -877,14 +880,6 @@
             const clickY = e.clientY;
             let closest = null;
             let minDist = 30; 
-            
-            // クリック判定の際も、世界の繰り返しを考慮する必要があるが、
-            // 簡易的に現在見えているメインの座標付近で判定するか、
-            // あるいは全オフセットを計算して最も近いものを探すのが正確。
-            // ここでは簡易対応として、latLngToContainerPointが返す「最短距離」のポイントを利用。
-            // LeafletのlatLngToContainerPointは通常、クリック位置に近い座標を返してくれるため、
-            // 大抵の場合はそのままで動作するが、厳密にはオフセット計算を入れるとより確実。
-            // 今回は描画側の修正を主目的とするため、既存ロジックを維持。
 
             for (let i = activeQuakes.length - 1; i >= 0; i--) {
                 const q = activeQuakes[i];
