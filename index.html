@@ -343,6 +343,11 @@
             </button>
         </div>
     </div>
+
+    <!-- UI: 表示切替ボタン -->
+    <button id="btn-toggle-ui" class="absolute bottom-20 right-4 z-[1000] bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition w-10 h-10 flex items-center justify-center font-bold" title="コントロールパネルの表示/非表示">
+        ✖️
+    </button>
     
     <!-- UI: 利用規約・プライバシーポリシーボタン -->
     <div class="absolute bottom-6 right-4 z-[1000] flex flex-col items-end gap-1">
@@ -489,6 +494,27 @@
             const val = parseInt(e.target.value);
             masterVolume = val / 100;
             volumeDisplay.innerText = `${val}%`;
+        });
+
+        // UI切り替えボタンの動作
+        const btnToggleUi = document.getElementById('btn-toggle-ui');
+        const controlPanel = document.getElementById('control-panel');
+        const legendPanel = document.getElementById('legend-panel');
+
+        btnToggleUi.addEventListener('click', () => {
+            // クラスの付け外しで表示/非表示を切り替え
+            // コントロールパネルのみを対象とする
+            controlPanel.classList.toggle('opacity-0');
+            controlPanel.classList.toggle('pointer-events-none');
+            
+            // 凡例（Magnitude枠）の非表示切り替えは削除しました
+            // legendPanel.classList.toggle('opacity-0'); 
+
+            if (controlPanel.classList.contains('opacity-0')) {
+                btnToggleUi.innerText = '🛠️'; // 非表示中はツールアイコン（再表示用）
+            } else {
+                btnToggleUi.innerText = '✖️'; // 表示中はバツアイコン（非表示用）
+            }
         });
 
 
@@ -719,8 +745,8 @@
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
         const infoPanel = document.getElementById('info-panel');
-        const controlPanel = document.getElementById('control-panel');
-        const legendPanel = document.getElementById('legend-panel');
+        // const controlPanel = document.getElementById('control-panel'); // 上で定義済み
+        // const legendPanel = document.getElementById('legend-panel'); // 上で定義済み
         const btnReload = document.getElementById('btn-reload');
 
         function handleFile(file) {
