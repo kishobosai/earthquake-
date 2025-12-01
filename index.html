@@ -20,20 +20,32 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            background-color: #eef2f5; /* 背景色を明るいグレーに変更 */
+            color: #333; /* 文字色をダークグレーに変更 */
         }
 
         #map {
             width: 100vw;
             height: 100vh;
             z-index: 1;
-            background-color: #111;
+            background-color: #d6eaf8; /* 地図ロード前の背景色（海の色に近い色） */
         }
 
-        /* 地図タイルの明るさを調整 */
-        .leaflet-tile-pane {
-            filter: brightness(1.25) contrast(0.95);
+        /* --- 地図タイルの調整 --- */
+        .base-tiles {
+            /* コントラストを少し上げてくっきりさせる */
+            filter: contrast(1.05) saturate(1.1);
+        }
+
+        /* グリッド線のスタイル */
+        .leaflet-tile-container .grid-tile {
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* リンクの色を調整（地図クレジット用） */
+        .leaflet-container a {
+            color: #2563eb; 
         }
 
         /* ファイルアップロードオーバーレイ */
@@ -43,7 +55,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(255, 255, 255, 0.9); /* 白ベースに変更 */
             z-index: 2000;
             display: flex;
             flex-direction: column;
@@ -58,27 +70,30 @@
         }
 
         .upload-box {
-            border: 2px dashed #4b5563;
+            border: 2px dashed #9ca3af;
             border-radius: 1rem;
             padding: 3rem;
             text-align: center;
-            background: rgba(30, 30, 30, 0.5);
+            background: rgba(255, 255, 255, 0.8);
             transition: all 0.3s;
             max-width: 90%;
             width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            color: #333;
         }
 
         .upload-box:hover, .upload-box.dragover {
             border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.05);
         }
 
-        /* コントロールパネル */
+        /* コントロールパネル (Glassmorphism Light) */
         .glass-panel {
-            background: rgba(30, 30, 30, 0.85);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            color: #333;
         }
 
         /* モーダルスタイル (利用規約・プライバシーポリシー共通) */
@@ -88,38 +103,40 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             z-index: 3000;
-            display: none; /* 初期状態は非表示 */
+            display: none; 
             justify-content: center;
             align-items: center;
         }
 
         .modal-content {
-            background: #222;
-            color: #ccc;
+            background: #ffffff;
+            color: #333;
             border-radius: 0.5rem;
             padding: 1.5rem;
             max-width: 90%;
             max-height: 90%;
             width: 700px;
             overflow-y: auto;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .leaflet-popup-content-wrapper {
-            background: rgba(30, 30, 30, 0.9);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
             border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .leaflet-popup-tip { background: rgba(30, 30, 30, 0.9); }
+        .leaflet-popup-tip { background: rgba(255, 255, 255, 0.95); }
         
+        /* スライダーのスタイル調整 (Light Mode) */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -5px;
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #2563eb; cursor: pointer; margin-top: -6px; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 4px; cursor: pointer; background: #555; border-radius: 2px;
+            width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px;
         }
         input[type=range]:focus { outline: none; }
     </style>
@@ -131,59 +148,59 @@
     <!-- 利用規約モーダル -->
     <div id="terms-modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-white mb-4">地震活動シミュレーター 利用規約</h2>
-            <div class="text-sm space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">地震活動シミュレーター 利用規約</h2>
+            <div class="text-sm space-y-4 text-gray-700">
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第1条（本規約の適用）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第1条（本規約の適用）</h3>
                     <p>本規約は、[地震活動シミュレーター]（以下「本サイト」という）の管理者である気象・防災チャンネル〈X〉（以下「管理者」という）が提供する本サイトの利用に関する一切の行為に適用されます。</p>
                     <p>利用者は、本サイトの利用を開始した時点で、本規約のすべての内容に同意したものとみなします。</p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第2条（本サイトの目的と免責事項）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第2条（本サイトの目的と免責事項）</h3>
                     <p>本サイトは、基本的に特定の地域における地震活動の傾向を理解するための教育および研究目的のシミュレーションツールとして提供されます。</p>
                     <p>管理者は、本サイトで提供するデータの正確性、完全性、最新性、有用性、および利用者の特定の目的に対する適合性について、一切保証しません。</p>
                     <p>利用者が本サイトの利用によって被ったいかなる損害（データの誤り、サイトの停止、第三者との紛争等を含むがこれらに限らない）についても、管理者は一切の責任を負いません。</p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第3条（知的財産権）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第3条（知的財産権）</h3>
                     <p>本サイトを構成するすべての要素（プログラム、デザイン、図、画像、データ構造、テキスト等）に関する著作権、特許権、商標権、その他一切の知的財産権は、管理者または管理者に利用を許諾した権利者に帰属します。</p>
                     <p>利用者は、本サイトの内容を私的利用の範囲を超えて、無断で複製、改変、公衆送信、その他の利用をすることはできません。</p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第4条（禁止事項）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第4条（禁止事項）</h3>
                     <p>利用者は、本サイトの利用にあたり、以下の行為を行ってはなりません。</p>
                     <ul class="list-disc ml-6 space-y-1 mt-2">
                         <li><span class="font-semibold">サイトに過度な負担をかける行為</span>
-                            <ul class="list-disc ml-6 text-xs text-gray-400">
+                            <ul class="list-disc ml-6 text-xs text-gray-500">
                                 <li>本サイトのサーバーまたはネットワークに過度な負荷をかける行為。</li>
                                 <li>ロボット、クローラー、その他の自動化ツールを用いて、サイトのデータを大量に、または継続的に取得する行為（スクレイピング）。</li>
                                 <li>本サイトの運営を妨害する行為、またはそのおそれのある行為。</li>
                             </ul>
                         </li>
                         <li><span class="font-semibold">権利侵害および違法行為</span>
-                            <ul class="list-disc ml-6 text-xs text-gray-400">
+                            <ul class="list-disc ml-6 text-xs text-gray-500">
                                 <li>他者または管理者の著作権、商標権、プライバシー権、肖像権、その他の権利を侵害する行為。</li>
                                 <li>法令、公序良俗に反する行為、またはそのおそれのある行為。</li>
                             </ul>
                         </li>
                         <li><span class="font-semibold">動画コンテンツの無断利用</span>
-                            <p class="text-xs text-gray-400">本サイトのシミュレーション画面を撮影または録画した動画コンテンツを、管理者の運営する気象・防災チャンネル（https://x.com/kisho_bousai）を含む管理者に対し、事前の承諾を得ることなく、SNS、動画共有サイト、その他の媒体にアップロードし公開する行為。（※注：個人での非営利な教育・研究目的での画面提示はこの限りではない。）</p>
+                            <p class="text-xs text-gray-500">本サイトのシミュレーション画面を撮影または録画した動画コンテンツを、管理者の運営する気象・防災チャンネル（https://x.com/kisho_bousai）を含む管理者に対し、事前の承諾を得ることなく、SNS、動画共有サイト、その他の媒体にアップロードし公開する行為。（※注：個人での非営利な教育・研究目的での画面提示はこの限りではない。）</p>
                         </li>
                         <li>その他本サイトの趣旨に照らして管理者が不適切と判断する行為。</li>
                     </ul>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第5条（規約違反への対応）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第5条（規約違反への対応）</h3>
                     <p>管理者は、利用者が本規約に違反した場合、または違反するおそれがあると判断した場合、事前の通知なしに、当該利用者に対する本サイトの利用を停止し、またはアクセスを禁止する措置を講じることができます。</p>
                     <p>前項の措置により利用者に生じた損害について、管理者は一切の責任を負いません。</p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第6条（本規約の変更）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第6条（本規約の変更）</h3>
                     <p>管理者は、必要と判断した場合、利用者に事前に通知することなく本規約をいつでも変更することができます。</p>
                     <p>本規約の変更後、利用者が本サイトを利用した場合、変更後の規約に同意したものとみなします。</p>
                 </section>
                 <section>
-                    <h3 class="font-bold text-lg text-blue-400">第7条（準拠法および管轄）</h3>
+                    <h3 class="font-bold text-lg text-blue-600">第7条（準拠法および管轄）</h3>
                     <p>本規約の解釈は日本法に準拠するものとします。</p>
                     <p>本サイトの利用に関して利用者と管理者の間に紛争が生じた場合、東京地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
                 </section>
@@ -194,15 +211,15 @@
         </div>
     </div>
 
-    <!-- プライバシーポリシーモーダル (新規追加) -->
+    <!-- プライバシーポリシーモーダル -->
     <div id="privacy-modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-white mb-4">プライバシーポリシー</h2>
-            <div class="text-sm space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">プライバシーポリシー</h2>
+            <div class="text-sm space-y-4 text-gray-700">
                 <p>[気象・防災チャンネル（X）]（以下「管理者」といいます）は、本サイトの利用者（以下「ユーザー」といいます）の個人情報保護の重要性を認識し、本サイトにおける個人情報およびそれに準ずる情報（以下「ユーザー情報」といいます）の取扱いについて、以下の通りプライバシーポリシー（以下「本ポリシー」といいます）を定めます。</p>
                 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第1条（収集するユーザー情報と収集方法）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第1条（収集するユーザー情報と収集方法）</h3>
                     <p>本サイトでは、主に以下のユーザー情報を収集します。</p>
                     <ul class="list-disc ml-6 mt-2">
                         <li><span class="font-semibold">アクセス情報</span><br>
@@ -213,7 +230,7 @@
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第2条（ユーザー情報を収集・利用する目的）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第2条（ユーザー情報を収集・利用する目的）</h3>
                     <p>管理者がユーザー情報を収集・利用する目的は、以下の通りです。</p>
                     <ul class="list-disc ml-6 mt-1">
                         <li>本サイトの安定的な運営、維持管理のため。</li>
@@ -224,36 +241,36 @@
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第3条（個人情報の第三者提供）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第3条（個人情報の第三者提供）</h3>
                     <p>管理者は、法令に基づき開示が許容される場合を除き、あらかじめユーザーの同意を得ることなく、個人情報を第三者に提供することはありません。</p>
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第4条（個人情報の管理）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第4条（個人情報の管理）</h3>
                     <p>管理者は、収集したユーザー情報について、適切な安全管理措置を講じ、漏洩、紛失、破壊、改ざんなどの防止に努めます。</p>
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第5条（Cookieについて）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第5条（Cookieについて）</h3>
                     <p>ユーザーは、ご自身のブラウザ設定を変更することにより、Cookieの利用を拒否することができます。ただし、その場合、本サイトの一部の機能が利用できなくなる場合があります。</p>
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第6条（プライバシーポリシーの変更）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第6条（プライバシーポリシーの変更）</h3>
                     <p>管理者は、法令の改正、サービス内容の変更、その他必要と判断した場合、本ポリシーを随時変更することができるものとします。</p>
                     <p>変更後の本ポリシーは、本サイト上に掲載された時点から効力を生じるものとします。</p>
                 </section>
 
                 <section>
-                    <h3 class="font-bold text-lg text-green-400">第7条（お問い合わせ窓口）</h3>
+                    <h3 class="font-bold text-lg text-green-600">第7条（お問い合わせ窓口）</h3>
                     <p>本ポリシーに関するお問い合わせは、以下の窓口までお願いいたします。</p>
-                    <div class="mt-2 ml-4 p-2 bg-gray-800 rounded">
+                    <div class="mt-2 ml-4 p-2 bg-gray-100 rounded border border-gray-200">
                         <p>管理者名: 気象・防災チャンネル</p>
-                        <p>連絡先: <a href="https://x.com/kisho_bousai" target="_blank" class="text-blue-400 hover:underline">https://x.com/kisho_bousai</a></p>
+                        <p>連絡先: <a href="https://x.com/kisho_bousai" target="_blank" class="text-blue-600 hover:underline">https://x.com/kisho_bousai</a></p>
                     </div>
                 </section>
 
-                <div class="text-right text-gray-500 text-xs mt-4">
+                <div class="text-right text-gray-400 text-xs mt-4">
                     制定日：2025年12月1日
                 </div>
             </div>
@@ -268,34 +285,34 @@
         <div class="upload-box" id="drop-zone">
             <div class="text-5xl mb-4">📂</div>
             <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
-            <p class="text-gray-400 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
+            <p class="text-gray-500 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
             
             <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
             <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition">
                 ファイルを選択
             </button>
-            <p class="mt-4 text-xs text-gray-500">※ Googleスプレッドシート等で結合したファイルも可</p>
+            <p class="mt-4 text-xs text-gray-400">※ Googleスプレッドシート等で結合したファイルも可</p>
         </div>
     </div>
 
     <!-- UI: タイトルと日時 -->
     <div class="absolute top-4 left-4 z-[1000] glass-panel p-4 rounded-lg max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
-        <h1 class="text-xl font-bold mb-1" id="sim-title">地震活動シミュレーション</h1>
-        <p class="text-xs text-gray-400 mb-2" id="sim-period">データを読み込んでください</p>
-        <div id="date-display" class="text-3xl font-mono font-bold text-white tracking-wider">
+        <h1 class="text-xl font-bold mb-1 text-gray-800" id="sim-title">地震活動シミュレーション</h1>
+        <p class="text-xs text-gray-500 mb-2" id="sim-period">データを読み込んでください</p>
+        <div id="date-display" class="text-3xl font-mono font-bold text-gray-800 tracking-wider">
             ----/--/--
         </div>
-        <div id="time-display" class="text-xl font-mono text-gray-300">
+        <div id="time-display" class="text-xl font-mono text-gray-600">
             --:--
         </div>
-        <div class="mt-2 text-sm text-gray-400">
+        <div class="mt-2 text-sm text-gray-500">
             表示済地震数: <span id="quake-count">0</span> / <span id="total-count">0</span>
         </div>
     </div>
 
     <!-- UI: 凡例 -->
     <div class="absolute bottom-8 left-4 z-[1000] glass-panel p-3 rounded-lg text-sm hidden sm:block opacity-0 transition-opacity duration-500" id="legend-panel">
-        <div class="font-bold mb-2 text-gray-300">Magnitude</div>
+        <div class="font-bold mb-2 text-gray-600">Magnitude</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#000000] border border-[#d500f9] mr-2 block shadow-[0_0_8px_rgba(213,0,249,0.8)]"></span> M9.0+</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#d50000] border border-[#000000] mr-2 block shadow-[0_0_5px_rgba(255,23,68,0.5)]"></span> M8.0 - 8.9</div>
         <!-- 縁取り: 灰色(#808080) -->
@@ -315,12 +332,12 @@
         </div>
         <div class="flex justify-between items-center text-sm">
             <div class="flex gap-2">
-                <button id="btn-reset" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded transition text-xs" disabled>⏮ Reset</button>
-                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs" disabled>▶ Play</button>
+                <button id="btn-reset" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition text-xs border border-gray-300" disabled>⏮ Reset</button>
+                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs shadow" disabled>▶ Play</button>
             </div>
             <div class="flex items-center gap-2">
-                <label for="speed-select" class="text-xs text-gray-400">速度:</label>
-                <select id="speed-select" class="bg-gray-700 text-white border-none rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
+                <label for="speed-select" class="text-xs text-gray-600">速度:</label>
+                <select id="speed-select" class="bg-gray-100 text-gray-800 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
                     <option value="5000">低速 (1秒=5時間)</option>
                     <option value="24000">中速 (1秒=1日)</option>
                     <option value="72000" selected>高速 (1秒=3日)</option>
@@ -328,8 +345,8 @@
                 </select>
             </div>
         </div>
-        <div class="mt-2 pt-2 border-t border-gray-600 flex justify-end">
-            <button id="btn-reload" class="text-xs text-gray-400 hover:text-white flex items-center">
+        <div class="mt-2 pt-2 border-t border-gray-300 flex justify-end">
+            <button id="btn-reload" class="text-xs text-gray-500 hover:text-blue-600 flex items-center transition">
                 📂 別のファイルを読み込む
             </button>
         </div>
@@ -338,10 +355,10 @@
     <!-- UI: 利用規約・プライバシーポリシーボタン -->
     <div class="absolute bottom-6 right-4 z-[1000] flex flex-col items-end gap-1">
         <div class="flex gap-4">
-            <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
+            <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-500 hover:text-blue-600 underline">
                 利用規約
             </button>
-            <button id="btn-privacy" onclick="document.getElementById('privacy-modal').style.display = 'flex'" class="text-xs text-gray-400 hover:text-white underline">
+            <button id="btn-privacy" onclick="document.getElementById('privacy-modal').style.display = 'flex'" class="text-xs text-gray-500 hover:text-blue-600 underline">
                 プライバシーポリシー
             </button>
         </div>
@@ -373,11 +390,27 @@
         L.control.zoom({ position: 'topright' }).addTo(map);
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO',
+        // --- 地図タイル設定 (CartoDB Voyager No Labels) ---
+        // 衛星写真から、シンプルで見やすいフラットデザインの地図に変更しました。
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
-            maxZoom: 19
+            maxZoom: 20,
+            className: 'base-tiles'
         }).addTo(map);
+
+        // --- 簡易グリッドレイヤー (経緯線風) ---
+        // 画像のようなグリッド感を出すために、タイル境界線を利用した簡易グリッドを追加
+        L.GridLayer.Grid = L.GridLayer.extend({
+            createTile: function (coords) {
+                var tile = document.createElement('div');
+                tile.className = 'grid-tile'; // CSSでボーダーを設定
+                return tile;
+            }
+        });
+        // グリッドを最前面に表示しないよう zIndex を調整
+        new L.GridLayer.Grid({ zIndex: 10, opacity: 0.5 }).addTo(map);
+
 
         // --- 高速描画用 Canvas レイヤー ---
         let canvasEl = null;
@@ -600,12 +633,12 @@
             dropZone.innerHTML = `
                 <div class="text-5xl mb-4">📂</div>
                 <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
-                <p class="text-gray-400 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
+                <p class="text-gray-500 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
                 <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
                 <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition">
                     ファイルを選択
                 </button>
-                <p class="mt-4 text-xs text-gray-500">※ 気象庁データの日本語ヘッダー対応済み</p>
+                <p class="mt-4 text-xs text-gray-400">※ 気象庁データの日本語ヘッダー対応済み</p>
             `;
         }
 
