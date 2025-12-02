@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>地震活動シミュレーター</title>
     
     <!-- Leaflet CSS -->
@@ -70,12 +70,13 @@
         .upload-box {
             border: 2px dashed #9ca3af;
             border-radius: 1rem;
-            padding: 3rem;
+            padding: 2rem; /* スマホ向けに少し縮小 */
             text-align: center;
             background: rgba(255, 255, 255, 0.8);
             transition: all 0.3s;
             max-width: 90%;
-            width: 500px;
+            width: 100%; /* スマホ対応 */
+            max-width: 500px; /* PCでの最大幅 */
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             color: #333;
         }
@@ -113,15 +114,21 @@
             color: #333;
             border-radius: 0.5rem;
             padding: 1.5rem;
-            max-width: 90%;
+            max-width: 95%; /* スマホ対応: 画面幅いっぱいにならないように */
             max-height: 90%;
-            width: 700px;
+            width: 100%; /* スマホベース */
             overflow-y: auto;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
         
-        #settings-modal .modal-content, #speed-modal .modal-content {
-            width: 450px; 
+        /* PC画面での幅制限 */
+        @media (min-width: 640px) {
+            .modal-content {
+                width: 700px;
+            }
+            #settings-modal .modal-content, #speed-modal .modal-content {
+                width: 450px; 
+            }
         }
 
         .leaflet-popup-content-wrapper {
@@ -144,12 +151,12 @@
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; 
-            height: 16px; 
-            width: 16px; 
+            height: 20px; /* スマホで押しやすいように少し大きく */
+            width: 20px; 
             border-radius: 50%; 
             background: #2563eb; 
             cursor: pointer; 
-            margin-top: -6px; 
+            margin-top: -8px; 
             border: 2px solid white; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
@@ -180,7 +187,7 @@
     <!-- 利用規約モーダル -->
     <div id="terms-modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">地震活動シミュレーター 利用規約</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">地震活動シミュレーター 利用規約</h2>
             <div class="text-sm space-y-4 text-gray-700">
                 <p>このシミュレーターは、オープンデータ（USGS, 気象庁など）を可視化するためのツールです。</p>
                 <ul class="list-disc list-inside ml-4">
@@ -198,7 +205,7 @@
     <!-- プライバシーポリシーモーダル -->
     <div id="privacy-modal">
         <div class="modal-content">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">プライバシーポリシー</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">プライバシーポリシー</h2>
             <div class="text-sm space-y-4 text-gray-700">
                 <p>本サイトは、ブラウザ上で動作するアプリケーションです。</p>
                 <p>読み込まれたCSVファイル等のデータは、利用者の端末内（ブラウザ）でのみ処理され、外部サーバーへ送信されることはありません。</p>
@@ -262,7 +269,7 @@
 
     <!-- 速度設定モーダル -->
     <div id="speed-modal">
-        <div class="modal-content" style="width: 320px; max-width: 90%;">
+        <div class="modal-content" style="width: 100%; max-width: 320px;">
             <h3 class="text-lg font-bold mb-3 text-gray-800">速度をカスタム指定</h3>
             <p class="text-sm text-gray-600 mb-4">
                 1秒間に進める日数を入力してください。<br>
@@ -280,7 +287,7 @@
     <div id="upload-overlay">
         <div class="upload-box" id="drop-zone">
             <div class="text-5xl mb-4">📂</div>
-            <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
+            <h2 class="text-xl sm:text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
             <p class="text-gray-500 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
             
             <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
@@ -291,14 +298,18 @@
         </div>
     </div>
 
-    <!-- UI: タイトルと日時 -->
-    <div class="absolute top-4 left-4 z-[1000] glass-panel p-4 rounded-lg max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
-        <h1 class="text-xl font-bold mb-1 text-gray-800" id="sim-title">地震活動シミュレーション</h1>
+    <!-- UI: タイトルと日時 (スマホ対応修正) -->
+    <!-- 
+        スマホ(デフォルト): top-2 left-2 right-2 で横幅いっぱいに。文字サイズ調整。
+        PC(sm以上): top-4 left-4 幅固定。
+    -->
+    <div class="absolute top-2 left-2 right-2 sm:right-auto sm:left-4 sm:top-4 z-[1000] glass-panel p-3 sm:p-4 rounded-lg w-auto sm:max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
+        <h1 class="text-lg sm:text-xl font-bold mb-1 text-gray-800 truncate" id="sim-title">地震活動シミュレーション</h1>
         <p class="text-xs text-gray-500 mb-2" id="sim-period">データを読み込んでください</p>
-        <div id="date-display" class="text-3xl font-mono font-bold text-gray-800 tracking-wider">
+        <div id="date-display" class="text-2xl sm:text-3xl font-mono font-bold text-gray-800 tracking-wider">
             ----/--/--
         </div>
-        <div id="time-display" class="text-xl font-mono text-gray-600">
+        <div id="time-display" class="text-lg sm:text-xl font-mono text-gray-600">
             --:--
         </div>
         <div class="mt-2 text-sm text-gray-500">
@@ -321,21 +332,27 @@
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#2979ff] border border-gray-500 mr-2 block"></span> M1.0 - 1.9</div>
     </div>
 
-    <!-- UI: コントロール -->
-    <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] glass-panel p-3 rounded-lg w-[90%] max-w-md flex flex-col gap-2 opacity-0 transition-opacity duration-500" id="control-panel">
+    <!-- UI: コントロール (スマホ対応修正) -->
+    <!-- 
+        スマホ: bottom-4 left-1/2 (padding小さめ, flex-wrap有効化)
+        PC: bottom-6
+    -->
+    <div class="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] glass-panel p-2 sm:p-3 rounded-lg w-[95%] sm:w-[90%] max-w-md flex flex-col gap-2 opacity-0 transition-opacity duration-500" id="control-panel">
         <div class="w-full">
             <!-- 初期スタイルとしてグラデーションを設定 -->
             <input type="range" id="time-slider" min="0" max="100" value="0" step="0.01" class="w-full" disabled style="background: linear-gradient(to right, #2563eb 0%, #cbd5e1 0%);">
         </div>
-        <div class="flex justify-between items-center text-sm">
-            <div class="flex gap-2">
+        <!-- flex-wrapを追加して、幅が足りない時は折り返してはみ出し防止 -->
+        <div class="flex flex-wrap justify-between items-center text-sm gap-y-2">
+            <div class="flex gap-2 items-center">
                 <button id="btn-reset" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition text-xs border border-gray-300" disabled>⏮ Reset</button>
-                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-20 text-xs shadow" disabled>▶ Play</button>
+                <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-16 sm:w-20 text-xs shadow" disabled>▶ Play</button>
             </div>
-            <div class="flex items-center gap-2">
-                <label for="speed-select" class="text-xs text-gray-600">速度:</label>
-                <!-- 速度選択肢 -->
-                <select id="speed-select" class="bg-gray-100 text-gray-800 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none cursor-pointer">
+            <div class="flex items-center gap-1 sm:gap-2">
+                <!-- スマホでは「速度:」ラベルを消してスペース確保 -->
+                <label for="speed-select" class="text-xs text-gray-600 hidden sm:inline">速度:</label>
+                <!-- 速度選択肢 (flex-shrinkで縮小許可) -->
+                <select id="speed-select" class="bg-gray-100 text-gray-800 border border-gray-300 rounded px-1 sm:px-2 py-1 text-xs focus:outline-none cursor-pointer flex-shrink min-w-0 max-w-[140px] sm:max-w-none">
                     <option value="0.25">1秒 = 6時間</option>
                     <option value="1">1秒 = 1日</option>
                     <option value="3" selected>1秒 = 3日</option>
@@ -343,7 +360,7 @@
                     <option value="14">1秒 = 2週間</option>
                     <option value="21">1秒 = 3週間</option>
                     <option value="30">1秒 = 1ヶ月</option>
-                    <option value="custom">カスタム (速度を指定)...</option>
+                    <option value="custom">カスタム...</option>
                 </select>
                 <!-- 設定ボタン -->
                 <button id="btn-open-settings" onclick="document.getElementById('settings-modal').style.display = 'flex'" class="text-gray-400 hover:text-gray-600 transition p-1" title="表示・音声設定">
@@ -351,7 +368,7 @@
                 </button>
             </div>
         </div>
-        <div class="mt-2 pt-2 border-t border-gray-300 flex justify-end">
+        <div class="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-gray-300 flex justify-end">
             <button id="btn-reload" class="text-xs text-gray-500 hover:text-blue-600 flex items-center transition">
                 📂 別のファイルを読み込む
             </button>
@@ -359,17 +376,17 @@
     </div>
 
     <!-- UI: 表示切替ボタン -->
-    <button id="btn-toggle-ui" class="absolute bottom-20 right-4 z-[1000] bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition w-10 h-10 flex items-center justify-center font-bold" title="コントロールパネルの表示/非表示">
+    <button id="btn-toggle-ui" class="absolute bottom-24 sm:bottom-20 right-2 sm:right-4 z-[1000] bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition w-10 h-10 flex items-center justify-center font-bold" title="コントロールパネルの表示/非表示">
         ✖️
     </button>
     
-    <!-- UI: 利用規約・プライバシーポリシーボタン -->
-    <div class="absolute bottom-6 right-4 z-[1000] flex flex-col items-end gap-1">
-        <div class="flex gap-4">
-            <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-xs text-gray-500 hover:text-blue-600 underline">
+    <!-- UI: 利用規約・プライバシーポリシーボタン (スマホでは少し位置調整) -->
+    <div class="absolute bottom-2 sm:bottom-6 right-2 sm:right-4 z-[900] flex flex-col items-end gap-1">
+        <div class="flex gap-2 sm:gap-4 bg-white/50 p-1 rounded backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none">
+            <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-[10px] sm:text-xs text-gray-600 sm:text-gray-500 hover:text-blue-600 underline">
                 利用規約
             </button>
-            <button id="btn-privacy" onclick="document.getElementById('privacy-modal').style.display = 'flex'" class="text-xs text-gray-500 hover:text-blue-600 underline">
+            <button id="btn-privacy" onclick="document.getElementById('privacy-modal').style.display = 'flex'" class="text-[10px] sm:text-xs text-gray-600 sm:text-gray-500 hover:text-blue-600 underline">
                 プライバシーポリシー
             </button>
         </div>
@@ -582,8 +599,8 @@
             attributionControl: false,
             preferCanvas: true,
             // ズーム微調整用の設定
-            zoomSnap: 0.5,       
-            zoomDelta: 0.5,      
+            zoomSnap: 0.5,        
+            zoomDelta: 0.5,       
             wheelPxPerZoomLevel: 120 
         });
 
@@ -832,7 +849,7 @@
         function resetUploadUI() {
             dropZone.innerHTML = `
                 <div class="text-5xl mb-4">📂</div>
-                <h2 class="text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
+                <h2 class="text-xl sm:text-2xl font-bold mb-2">CSVファイルをドロップ</h2>
                 <p class="text-gray-500 mb-6 text-sm">USGS形式 または 気象庁形式(JMA)のCSV<br>クリックしてファイルを選択</p>
                 <input type="file" id="file-input-overlay" accept=".csv" class="hidden">
                 <button onclick="document.getElementById('file-input-overlay').click()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-full transition">
