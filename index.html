@@ -121,7 +121,7 @@
         }
         
         #settings-modal .modal-content, #speed-modal .modal-content {
-            width: 400px; 
+            width: 450px; 
         }
 
         .leaflet-popup-content-wrapper {
@@ -233,9 +233,23 @@
                         <span id="volume-display" class="text-xs text-gray-500 w-8 text-right">50%</span>
                     </div>
 
+                    <!-- 音質選択エリア (修正版) -->
+                    <div class="mt-4 ml-7 opacity-50 transition-opacity" id="sound-type-area">
+                        <span class="text-xs text-gray-500 block mb-2 font-bold">音質タイプ:</span>
+                        <div class="flex flex-col space-y-2">
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="radio" name="sound-type" value="sharp" class="form-radio h-4 w-4 text-blue-600">
+                                <span class="ml-2 text-xs text-gray-700"><b>鋭い (Sharp)</b> - 余韻短め・小規模は静か</span>
+                            </label>
+                            <label class="inline-flex items-center cursor-pointer">
+                                <input type="radio" name="sound-type" value="power" class="form-radio h-4 w-4 text-blue-600" checked>
+                                <span class="ml-2 text-xs text-gray-700"><b>強い (Power)</b> - 少し低めの衝撃音</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <p class="text-xs text-gray-400 mt-2 ml-7">
-                        M4〜M9+: 「バッ！」という短い衝撃音<br>
-                        M5未満はごく小さな音で再生されます
+                        マグニチュードに応じた衝撃音が鳴ります。
                     </p>
                 </div>
 
@@ -377,12 +391,13 @@
         let noiseBuffer = null; 
         let isSoundEnabled = false; // デフォルトOFF
         let masterVolume = 0.5; // デフォルト50%
+        let currentSoundType = 'power'; // 'sharp' or 'power'
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 
-                // ノイズバッファの生成 (2秒分: 地響き・衝撃音用)
+                // ノイズバッファの生成 (2秒分)
                 const bufferSize = audioCtx.sampleRate * 2;
                 noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -394,8 +409,7 @@
                 audioCtx.resume();
             }
         }
-
-        // --- 効果音再生ロジック (余韻短縮 & M5未満音量抑制版) ---
+        // --- 効果音再生ロジック (切り替え版: Power音量調整) ---
         function playQuakeSound(mag) {
             if (!isSoundEnabled || !audioCtx) return;
             if (mag < 4.0) return; // M4未満は鳴らさない
@@ -405,42 +419,72 @@
             // 強度計算: M4〜M9+ を 0.0 〜 1.0 に正規化
             const intensity = Math.min(1, Math.max(0, (mag - 4.0) / 5.0));
             
-            // 音量計算: M5未満(intensity < 0.2)の音量をさらに下げる
-            // 以前: 0.08 + 0.92 * i^2
-            // 今回: M4付近を極小にするため、ベースを下げ、曲線を急にする(3乗)
-            // これによりM4付近はかなり小さく、M6以上で急に大きくなる
-            const volumeBase = 0.02 + 0.98 * Math.pow(intensity, 3);
-            const volume = masterVolume * volumeBase;
+            let volumeBase, volume;
+            let startFreq, endFreq, oscDecay, oscDur;
+            let filterFreq, filterQ, noiseVolBase, noiseDecay;
 
-            // 1. Oscillator (衝撃の芯)
+            if (currentSoundType === 'sharp') {
+                // --- パターンA: 鋭い (Sharp) ---
+                // M5以下を極端に抑える (3乗カーブ)
+                volumeBase = 0.02 + 0.98 * Math.pow(intensity, 3);
+                volume = masterVolume * volumeBase;
+
+                // ピッチ
+                startFreq = 300 + (intensity * 600);
+                endFreq = 20 + (intensity * 20);
+                // Oscエンベロープ: 短め
+                oscDecay = 0.06; 
+                const ampDecay = 0.05 + (intensity * 0.15);
+                oscDur = ampDecay + 0.05;
+
+                // ノイズ
+                filterFreq = 1000 + (intensity * 5000);
+                filterQ = 1.0;
+                noiseVolBase = 1.0;
+                noiseDecay = 0.05 + (intensity * 0.2);
+
+            } else {
+                // --- パターンB: 強い (Power) ---
+                // 音量計算: ブーストを削除し、Sharpと同じ最大音量レベルに合わせる
+                // カーブは維持 (M5でも聞こえやすいように1.5乗)
+                volumeBase = 0.08 + 0.92 * Math.pow(intensity, 1.5);
+                volume = masterVolume * volumeBase; // * 1.7 を削除
+
+                // ピッチ: 少し高めで抜けが良い
+                startFreq = 280 + (intensity * 220);
+                endFreq = 50;
+                // Oscエンベロープ: 普通
+                oscDecay = 0.1;
+                const ampDecay = 0.1 + (intensity * 0.2);
+                oscDur = ampDecay + 0.1;
+
+                // ノイズ: フィルターを開放してこもり解消
+                filterFreq = 600 + (intensity * 1500);
+                filterQ = 1.0;
+                noiseVolBase = 0.8;
+                noiseDecay = 0.15 + (intensity * 0.25);
+            }
+
+            // 1. Oscillator
             const osc = audioCtx.createOscillator();
             const oscGain = audioCtx.createGain();
             osc.connect(oscGain);
             oscGain.connect(audioCtx.destination);
 
-            osc.type = 'triangle'; 
-            
-            // ピッチ: 鋭いアタック
-            const startFreq = 300 + (intensity * 600); 
-            const endFreq = 20 + (intensity * 20);
-
+            osc.type = 'triangle';
             osc.frequency.setValueAtTime(startFreq, t);
-            // ピッチ降下時間を短縮してよりタイトに (0.08 -> 0.06)
-            osc.frequency.exponentialRampToValueAtTime(endFreq, t + 0.06); 
+            osc.frequency.exponentialRampToValueAtTime(endFreq, t + oscDecay);
 
-            // 音量エンベロープ: 余韻を「絶対的に短め」に
             oscGain.gain.setValueAtTime(0, t);
-            oscGain.gain.linearRampToValueAtTime(volume, t + 0.005); 
-            
-            // Decayを大幅短縮: 以前 0.1+(i*0.3) -> 今回 0.05+(i*0.15)
-            // どんなに大きくても0.2秒程度でほぼ消える設定
-            const decayTime = 0.05 + (intensity * 0.15); 
-            oscGain.gain.exponentialRampToValueAtTime(0.001, t + decayTime);
+            oscGain.gain.linearRampToValueAtTime(volume, t + 0.005);
+            // Amp decay
+            const finalOscDecay = (currentSoundType === 'sharp') ? (0.05 + intensity*0.15) : (0.1 + intensity*0.2);
+            oscGain.gain.exponentialRampToValueAtTime(0.001, t + finalOscDecay);
 
             osc.start(t);
-            osc.stop(t + decayTime + 0.05);
+            osc.stop(t + finalOscDecay + 0.1);
 
-            // 2. Noise (破裂音)
+            // 2. Noise
             if (noiseBuffer) {
                 const noise = audioCtx.createBufferSource();
                 noise.buffer = noiseBuffer;
@@ -451,23 +495,18 @@
                 noiseFilter.connect(noiseGain);
                 noiseGain.connect(audioCtx.destination);
 
-                // フィルタ
                 noiseFilter.type = 'lowpass';
-                noiseFilter.frequency.setValueAtTime(1000 + (intensity * 5000), t); 
-                noiseFilter.Q.value = 1.0; 
+                noiseFilter.frequency.setValueAtTime(filterFreq, t);
+                noiseFilter.Q.value = filterQ;
 
-                const noiseVol = volume * 1.0; 
+                const noiseVol = volume * noiseVolBase;
                 
                 noiseGain.gain.setValueAtTime(0, t);
-                noiseGain.gain.linearRampToValueAtTime(noiseVol, t + 0.005); 
-                
-                // ノイズの余韻も短縮
-                // 以前 0.1+(i*0.4) -> 今回 0.05+(i*0.2)
-                const noiseDecay = 0.05 + (intensity * 0.2);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDecay); 
+                noiseGain.gain.linearRampToValueAtTime(noiseVol, t + 0.005);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDecay);
 
                 noise.start(t);
-                noise.stop(t + noiseDecay + 0.05);
+                noise.stop(t + noiseDecay + 0.1);
             }
         }
 
@@ -476,6 +515,8 @@
         const volumeArea = document.getElementById('volume-control-area');
         const volumeSlider = document.getElementById('volume-slider');
         const volumeDisplay = document.getElementById('volume-display');
+        const soundTypeArea = document.getElementById('sound-type-area');
+        const soundTypeRadios = document.querySelectorAll('input[name="sound-type"]');
 
         // チェックボックス変更時
         soundCheck.addEventListener('change', (e) => {
@@ -483,9 +524,11 @@
             volumeSlider.disabled = !isSoundEnabled;
             if (isSoundEnabled) {
                 volumeArea.classList.remove('opacity-50');
+                soundTypeArea.classList.remove('opacity-50');
                 initAudio(); // ONにした瞬間にAudioContextを準備
             } else {
                 volumeArea.classList.add('opacity-50');
+                soundTypeArea.classList.add('opacity-50');
             }
         });
 
@@ -494,6 +537,13 @@
             const val = parseInt(e.target.value);
             masterVolume = val / 100;
             volumeDisplay.innerText = `${val}%`;
+        });
+
+        // 音質タイプ変更時
+        soundTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentSoundType = e.target.value;
+            });
         });
 
         // UI切り替えボタンの動作
@@ -745,8 +795,8 @@
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
         const infoPanel = document.getElementById('info-panel');
-        // const controlPanel = document.getElementById('control-panel'); // 上で定義済み
-        // const legendPanel = document.getElementById('legend-panel'); // 上で定義済み
+        // const controlPanel = document.getElementById('control-panel'); // 重複定義のためコメントアウト
+        // const legendPanel = document.getElementById('legend-panel'); // 重複定義のためコメントアウト
         const btnReload = document.getElementById('btn-reload');
 
         function handleFile(file) {
