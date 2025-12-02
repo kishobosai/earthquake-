@@ -70,13 +70,13 @@
         .upload-box {
             border: 2px dashed #9ca3af;
             border-radius: 1rem;
-            padding: 2rem; /* スマホ向けに少し縮小 */
+            padding: 2rem;
             text-align: center;
             background: rgba(255, 255, 255, 0.8);
             transition: all 0.3s;
             max-width: 90%;
-            width: 100%; /* スマホ対応 */
-            max-width: 500px; /* PCでの最大幅 */
+            width: 100%; 
+            max-width: 500px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
             color: #333;
         }
@@ -114,9 +114,9 @@
             color: #333;
             border-radius: 0.5rem;
             padding: 1.5rem;
-            max-width: 95%; /* スマホ対応: 画面幅いっぱいにならないように */
+            max-width: 95%; 
             max-height: 90%;
-            width: 100%; /* スマホベース */
+            width: 100%; 
             overflow-y: auto;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
@@ -151,7 +151,7 @@
 
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; 
-            height: 20px; /* スマホで押しやすいように少し大きく */
+            height: 20px; 
             width: 20px; 
             border-radius: 50%; 
             background: #2563eb; 
@@ -178,6 +178,39 @@
         }
 
         input[type=range]:focus { outline: none; }
+
+        /* リサイズハンドル用のスタイル */
+        #resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 24px;
+            height: 24px;
+            cursor: nwse-resize; /* 斜め矢印カーソル */
+            z-index: 10;
+            touch-action: none; /* ブラウザのデフォルトタッチ動作を無効化 */
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            padding: 2px;
+        }
+        
+        /* ハンドルの見た目（右下の斜線） */
+        #resize-handle::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid #999;
+            border-bottom: 2px solid #999;
+            display: block;
+        }
+
+        /* PC画面ではハンドルを隠す */
+        @media (min-width: 640px) {
+            #resize-handle {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -228,7 +261,6 @@
                 <div>
                     <h3 class="font-bold text-gray-600 mb-2">効果音 (Sound Effects)</h3>
                     <label class="flex items-center space-x-2 cursor-pointer mb-3">
-                        <!-- デフォルトOFFなのでchecked属性はなし -->
                         <input type="checkbox" id="sound-enabled-check" class="form-checkbox h-5 w-5 text-blue-600">
                         <span>地震発生時に音を鳴らす (M4.0以上)</span>
                     </label>
@@ -240,7 +272,7 @@
                         <span id="volume-display" class="text-xs text-gray-500 w-8 text-right">50%</span>
                     </div>
 
-                    <!-- 音質選択エリア (修正版) -->
+                    <!-- 音質選択エリア -->
                     <div class="mt-4 ml-7 opacity-50 transition-opacity" id="sound-type-area">
                         <span class="text-xs text-gray-500 block mb-2 font-bold">音質タイプ:</span>
                         <div class="flex flex-col space-y-2">
@@ -254,7 +286,6 @@
                             </label>
                         </div>
                     </div>
-
                     <p class="text-xs text-gray-400 mt-2 ml-7">
                         マグニチュードに応じた衝撃音が鳴ります。
                     </p>
@@ -298,21 +329,28 @@
         </div>
     </div>
 
-    <!-- UI: タイトルと日時 (スマホ対応修正) -->
+    <!-- UI: タイトルと日時 (リサイズ対応) -->
     <!-- 
-        スマホ(デフォルト): top-2 left-2 right-2 で横幅いっぱいに。文字サイズ調整。
-        PC(sm以上): top-4 left-4 幅固定。
+        変更点: 
+        - テキストサイズを text-sm, text-xl など小さめに設定
+        - #resize-handle を追加
+        - width/height は JS で制御するため、初期スタイルはCSSクラスで指定
+        - overflow-hidden と whitespace-nowrap を追加して文字崩れ防止
     -->
-    <div class="absolute top-2 left-2 right-2 sm:right-auto sm:left-4 sm:top-4 z-[1000] glass-panel p-3 sm:p-4 rounded-lg w-auto sm:max-w-sm transition-opacity duration-500 opacity-0" id="info-panel">
-        <h1 class="text-lg sm:text-xl font-bold mb-1 text-gray-800 truncate" id="sim-title">地震活動シミュレーション</h1>
-        <p class="text-xs text-gray-500 mb-2" id="sim-period">データを読み込んでください</p>
-        <div id="date-display" class="text-2xl sm:text-3xl font-mono font-bold text-gray-800 tracking-wider">
+    <div class="absolute top-2 left-2 z-[1000] glass-panel p-2 sm:p-4 rounded-lg transition-opacity duration-500 opacity-0 min-w-[150px] min-h-[80px] overflow-hidden" id="info-panel" style="width: auto; max-width: 95vw;">
+        <!-- リサイズハンドル (右下) -->
+        <div id="resize-handle"></div>
+        
+        <h1 class="text-sm sm:text-xl font-bold mb-1 text-gray-800 truncate leading-tight whitespace-nowrap" id="sim-title">地震活動シミュレーション</h1>
+        <p class="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-2 leading-tight whitespace-nowrap" id="sim-period">データを読み込んでください</p>
+        
+        <div id="date-display" class="text-xl sm:text-3xl font-mono font-bold text-gray-800 tracking-wider leading-none mb-1 whitespace-nowrap">
             ----/--/--
         </div>
-        <div id="time-display" class="text-lg sm:text-xl font-mono text-gray-600">
+        <div id="time-display" class="text-base sm:text-xl font-mono text-gray-600 leading-none whitespace-nowrap">
             --:--
         </div>
-        <div class="mt-2 text-sm text-gray-500">
+        <div class="mt-1 sm:mt-2 text-[10px] sm:text-sm text-gray-500 whitespace-nowrap">
             表示済地震数: <span id="quake-count">0</span> / <span id="total-count">0</span>
         </div>
     </div>
@@ -322,7 +360,6 @@
         <div class="font-bold mb-2 text-gray-600">Magnitude</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#000000] border border-[#d500f9] mr-2 block shadow-[0_0_8px_rgba(213,0,249,0.8)]"></span> M9.0+</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#d50000] border border-[#000000] mr-2 block shadow-[0_0_5px_rgba(255,23,68,0.5)]"></span> M8.0 - 8.9</div>
-        <!-- 縁取り: 灰色(#808080) -->
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#d500f9] border border-gray-500 mr-2 block"></span> M7.0 - 7.9</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#f44336] border border-gray-500 mr-2 block"></span> M6.0 - 6.9</div>
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#ff9800] border border-gray-500 mr-2 block"></span> M5.0 - 5.9</div>
@@ -332,26 +369,18 @@
         <div class="flex items-center mb-1"><span class="w-4 h-4 rounded-full bg-[#2979ff] border border-gray-500 mr-2 block"></span> M1.0 - 1.9</div>
     </div>
 
-    <!-- UI: コントロール (スマホ対応修正) -->
-    <!-- 
-        スマホ: bottom-4 left-1/2 (padding小さめ, flex-wrap有効化)
-        PC: bottom-6
-    -->
+    <!-- UI: コントロール -->
     <div class="absolute bottom-4 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-[1000] glass-panel p-2 sm:p-3 rounded-lg w-[95%] sm:w-[90%] max-w-md flex flex-col gap-2 opacity-0 transition-opacity duration-500" id="control-panel">
         <div class="w-full">
-            <!-- 初期スタイルとしてグラデーションを設定 -->
             <input type="range" id="time-slider" min="0" max="100" value="0" step="0.01" class="w-full" disabled style="background: linear-gradient(to right, #2563eb 0%, #cbd5e1 0%);">
         </div>
-        <!-- flex-wrapを追加して、幅が足りない時は折り返してはみ出し防止 -->
         <div class="flex flex-wrap justify-between items-center text-sm gap-y-2">
             <div class="flex gap-2 items-center">
                 <button id="btn-reset" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition text-xs border border-gray-300" disabled>⏮ Reset</button>
                 <button id="btn-play-pause" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded font-bold transition w-16 sm:w-20 text-xs shadow" disabled>▶ Play</button>
             </div>
             <div class="flex items-center gap-1 sm:gap-2">
-                <!-- スマホでは「速度:」ラベルを消してスペース確保 -->
                 <label for="speed-select" class="text-xs text-gray-600 hidden sm:inline">速度:</label>
-                <!-- 速度選択肢 (flex-shrinkで縮小許可) -->
                 <select id="speed-select" class="bg-gray-100 text-gray-800 border border-gray-300 rounded px-1 sm:px-2 py-1 text-xs focus:outline-none cursor-pointer flex-shrink min-w-0 max-w-[140px] sm:max-w-none">
                     <option value="0.25">1秒 = 6時間</option>
                     <option value="1">1秒 = 1日</option>
@@ -362,7 +391,6 @@
                     <option value="30">1秒 = 1ヶ月</option>
                     <option value="custom">カスタム...</option>
                 </select>
-                <!-- 設定ボタン -->
                 <button id="btn-open-settings" onclick="document.getElementById('settings-modal').style.display = 'flex'" class="text-gray-400 hover:text-gray-600 transition p-1" title="表示・音声設定">
                     ⚙️
                 </button>
@@ -380,7 +408,7 @@
         ✖️
     </button>
     
-    <!-- UI: 利用規約・プライバシーポリシーボタン (スマホでは少し位置調整) -->
+    <!-- UI: 利用規約・プライバシーポリシーボタン -->
     <div class="absolute bottom-2 sm:bottom-6 right-2 sm:right-4 z-[900] flex flex-col items-end gap-1">
         <div class="flex gap-2 sm:gap-4 bg-white/50 p-1 rounded backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none">
             <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-[10px] sm:text-xs text-gray-600 sm:text-gray-500 hover:text-blue-600 underline">
@@ -406,15 +434,13 @@
         // --- 音声関連変数 ---
         let audioCtx = null;
         let noiseBuffer = null; 
-        let isSoundEnabled = false; // デフォルトOFF
-        let masterVolume = 0.5; // デフォルト50%
-        let currentSoundType = 'power'; // 'sharp' or 'power'
+        let isSoundEnabled = false; 
+        let masterVolume = 0.5; 
+        let currentSoundType = 'power'; 
 
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // ノイズバッファの生成 (2秒分)
                 const bufferSize = audioCtx.sampleRate * 2;
                 noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -426,14 +452,13 @@
                 audioCtx.resume();
             }
         }
-        // --- 効果音再生ロジック (切り替え版: Power音量調整) ---
+        
+        // --- 効果音再生ロジック ---
         function playQuakeSound(mag) {
             if (!isSoundEnabled || !audioCtx) return;
-            if (mag < 4.0) return; // M4未満は鳴らさない
+            if (mag < 4.0) return; 
 
             const t = audioCtx.currentTime;
-            
-            // 強度計算: M4〜M9+ を 0.0 〜 1.0 に正規化
             const intensity = Math.min(1, Math.max(0, (mag - 4.0) / 5.0));
             
             let volumeBase, volume;
@@ -441,48 +466,31 @@
             let filterFreq, filterQ, noiseVolBase, noiseDecay;
 
             if (currentSoundType === 'sharp') {
-                // --- パターンA: 鋭い (Sharp) ---
-                // M5以下を極端に抑える (3乗カーブ)
                 volumeBase = 0.02 + 0.98 * Math.pow(intensity, 3);
                 volume = masterVolume * volumeBase;
-
-                // ピッチ
                 startFreq = 300 + (intensity * 600);
                 endFreq = 20 + (intensity * 20);
-                // Oscエンベロープ: 短め
                 oscDecay = 0.06; 
                 const ampDecay = 0.05 + (intensity * 0.15);
                 oscDur = ampDecay + 0.05;
-
-                // ノイズ
                 filterFreq = 1000 + (intensity * 5000);
                 filterQ = 1.0;
                 noiseVolBase = 1.0;
                 noiseDecay = 0.05 + (intensity * 0.2);
-
             } else {
-                // --- パターンB: 強い (Power) ---
-                // 音量計算: ブーストを削除し、Sharpと同じ最大音量レベルに合わせる
-                // カーブは維持 (M5でも聞こえやすいように1.5乗)
                 volumeBase = 0.08 + 0.92 * Math.pow(intensity, 1.5);
-                volume = masterVolume * volumeBase; // * 1.7 を削除
-
-                // ピッチ: 少し高めで抜けが良い
+                volume = masterVolume * volumeBase; 
                 startFreq = 280 + (intensity * 220);
                 endFreq = 50;
-                // Oscエンベロープ: 普通
                 oscDecay = 0.1;
                 const ampDecay = 0.1 + (intensity * 0.2);
                 oscDur = ampDecay + 0.1;
-
-                // ノイズ: フィルターを開放してこもり解消
                 filterFreq = 600 + (intensity * 1500);
                 filterQ = 1.0;
                 noiseVolBase = 0.8;
                 noiseDecay = 0.15 + (intensity * 0.25);
             }
 
-            // 1. Oscillator
             const osc = audioCtx.createOscillator();
             const oscGain = audioCtx.createGain();
             osc.connect(oscGain);
@@ -494,14 +502,12 @@
 
             oscGain.gain.setValueAtTime(0, t);
             oscGain.gain.linearRampToValueAtTime(volume, t + 0.005);
-            // Amp decay
             const finalOscDecay = (currentSoundType === 'sharp') ? (0.05 + intensity*0.15) : (0.1 + intensity*0.2);
             oscGain.gain.exponentialRampToValueAtTime(0.001, t + finalOscDecay);
 
             osc.start(t);
             osc.stop(t + finalOscDecay + 0.1);
 
-            // 2. Noise
             if (noiseBuffer) {
                 const noise = audioCtx.createBufferSource();
                 noise.buffer = noiseBuffer;
@@ -517,7 +523,6 @@
                 noiseFilter.Q.value = filterQ;
 
                 const noiseVol = volume * noiseVolBase;
-                
                 noiseGain.gain.setValueAtTime(0, t);
                 noiseGain.gain.linearRampToValueAtTime(noiseVol, t + 0.005);
                 noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDecay);
@@ -527,7 +532,6 @@
             }
         }
 
-        // 音声設定イベントリスナー
         const soundCheck = document.getElementById('sound-enabled-check');
         const volumeArea = document.getElementById('volume-control-area');
         const volumeSlider = document.getElementById('volume-slider');
@@ -535,28 +539,25 @@
         const soundTypeArea = document.getElementById('sound-type-area');
         const soundTypeRadios = document.querySelectorAll('input[name="sound-type"]');
 
-        // チェックボックス変更時
         soundCheck.addEventListener('change', (e) => {
             isSoundEnabled = e.target.checked;
             volumeSlider.disabled = !isSoundEnabled;
             if (isSoundEnabled) {
                 volumeArea.classList.remove('opacity-50');
                 soundTypeArea.classList.remove('opacity-50');
-                initAudio(); // ONにした瞬間にAudioContextを準備
+                initAudio(); 
             } else {
                 volumeArea.classList.add('opacity-50');
                 soundTypeArea.classList.add('opacity-50');
             }
         });
 
-        // スライダー変更時
         volumeSlider.addEventListener('input', (e) => {
             const val = parseInt(e.target.value);
             masterVolume = val / 100;
             volumeDisplay.innerText = `${val}%`;
         });
 
-        // 音質タイプ変更時
         soundTypeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 currentSoundType = e.target.value;
@@ -565,40 +566,31 @@
 
         // UI切り替えボタンの動作
         const btnToggleUi = document.getElementById('btn-toggle-ui');
-        const controlPanel = document.getElementById('control-panel');
-        const legendPanel = document.getElementById('legend-panel');
-
+        const controlPanel = document.getElementById('control-panel'); // First declaration
+        
         btnToggleUi.addEventListener('click', () => {
-            // クラスの付け外しで表示/非表示を切り替え
-            // コントロールパネルのみを対象とする
             controlPanel.classList.toggle('opacity-0');
             controlPanel.classList.toggle('pointer-events-none');
             
-            // 凡例（Magnitude枠）の非表示切り替えは削除しました
-            // legendPanel.classList.toggle('opacity-0'); 
-
             if (controlPanel.classList.contains('opacity-0')) {
-                btnToggleUi.innerText = '🛠️'; // 非表示中はツールアイコン（再表示用）
+                btnToggleUi.innerText = '🛠️';
             } else {
-                btnToggleUi.innerText = '✖️'; // 表示中はバツアイコン（非表示用）
+                btnToggleUi.innerText = '✖️'; 
             }
         });
 
 
         // --- 地図初期化 ---
-        // 基本設定: ズームの刻みを0.5に設定
         const map = L.map('map', {
             center: [38, 138], 
             zoom: 5,
             minZoom: 2.2, 
             maxZoom: 9.0, 
-            // 日本を中心とした広い範囲（約430度幅）に制限
             maxBounds: [[-85, -90], [85, 370]], 
             maxBoundsViscosity: 1.0, 
             zoomControl: false,
             attributionControl: false,
             preferCanvas: true,
-            // ズーム微調整用の設定
             zoomSnap: 0.5,        
             zoomDelta: 0.5,       
             wheelPxPerZoomLevel: 120 
@@ -607,7 +599,6 @@
         L.control.zoom({ position: 'topright' }).addTo(map);
         L.control.attribution({ position: 'bottomright', prefix: 'Leaflet' }).addTo(map);
 
-        // --- 地図タイル設定 (CartoDB Voyager No Labels) ---
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -615,11 +606,10 @@
             className: 'base-tiles'
         }).addTo(map);
 
-        // --- 簡易グリッドレイヤー (経緯線風) ---
         L.GridLayer.Grid = L.GridLayer.extend({
             createTile: function (coords) {
                 var tile = document.createElement('div');
-                tile.className = 'grid-tile'; // CSSでボーダーを設定
+                tile.className = 'grid-tile';
                 return tile;
             }
         });
@@ -659,7 +649,6 @@
             drawCanvas();
         }
 
-        // --- アプリ状態 ---
         const state = {
             currentTime: 0,
             isPlaying: false,
@@ -667,20 +656,15 @@
             isReady: false
         };
         
-        // 現在の速度設定 (1秒あたりの日数)
         let currentSpeedDaysPerSec = 3; 
 
-        // --- イージング関数 ---
         function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
         function easeOutExpo(x) { return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); }
 
-        // --- 色・スタイル定義 (灰色縁取り) ---
         function getQuakeStyle(mag) {
-            // M9, M8は特別仕様 (変更なし)
             if (mag >= 9) return { fill: '#000000', stroke: '#d500f9', glow: 'rgba(213, 0, 249, 0.8)', strokeWidth: 2 };
             if (mag >= 8) return { fill: '#d50000', stroke: '#000000', glow: 'rgba(255, 23, 68, 0.8)', strokeWidth: 5 };
             
-            // 灰色(#808080)の極細(0.5px)縁取り
             const commonStroke = '#808080';
             const commonWidth = 0.5; 
 
@@ -693,7 +677,6 @@
             return { fill: '#2979ff', stroke: commonStroke, glow: null, strokeWidth: commonWidth };
         }
 
-        // --- 気象庁CSV用 座標パーサー ---
         function parseJMACoord(str) {
             if (!str) return NaN;
             let val = 0;
@@ -705,7 +688,6 @@
             return val;
         }
 
-        // --- 気象庁CSVパーサー ---
         function parseJMA_CSV(csv) {
             const lines = csv.trim().split('\n');
             if (lines.length < 2) return [];
@@ -741,7 +723,6 @@
 
                     const dateStr = row[0] + ' ' + row[1];
                     const d = new Date(dateStr);
-                    
                     const lat = parseJMACoord(row[3]);
                     const lng = parseJMACoord(row[4]);
                     
@@ -763,7 +744,6 @@
             return result.sort((a, b) => a.datetime - b.datetime);
         }
 
-        // --- USGS CSVパーサー ---
         function parseFullUSGS_CSV(csv) {
             const lines = csv.trim().split('\n');
             if (lines.length < 2) return [];
@@ -808,12 +788,11 @@
             return result.sort((a, b) => a.datetime - b.datetime);
         }
 
-        // --- ファイル読み込み処理 ---
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
         const infoPanel = document.getElementById('info-panel');
-        // const controlPanel = document.getElementById('control-panel'); // 重複定義のためコメントアウト
-        // const legendPanel = document.getElementById('legend-panel'); // 重複定義のためコメントアウト
+        const legendPanel = document.getElementById('legend-panel');
+        // Removed duplicated controlPanel variable declaration
         const btnReload = document.getElementById('btn-reload');
 
         function handleFile(file) {
@@ -879,7 +858,6 @@
 
             const lats = data.map(d => d.lat);
             const lngs = data.map(d => d.lng);
-            // ズーム上限(9.0)を適用
             map.fitBounds([[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]], { padding: [50, 50], maxZoom: 9.0 });
 
             uploadOverlay.classList.add('hidden');
@@ -891,7 +869,6 @@
             updateDisplay();
         }
 
-        // Event Listeners
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
         dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
         dropZone.addEventListener('drop', (e) => {
@@ -912,27 +889,23 @@
             state.isReady = false;
         });
 
-        // --- 速度変更ロジック (カスタム対応: モーダル使用 + 再選択対応) ---
         const speedSelect = document.getElementById('speed-select');
         const speedModal = document.getElementById('speed-modal');
         const customSpeedInput = document.getElementById('custom-speed-input');
         const btnSpeedOk = document.getElementById('btn-speed-ok');
         const btnSpeedCancel = document.getElementById('btn-speed-cancel');
-        let previousSpeedIndex = 2; // デフォルトは "3日" (index 2)
+        let previousSpeedIndex = 2; 
 
         speedSelect.addEventListener('change', (e) => {
             const valStr = e.target.value;
             if (valStr === 'custom') {
-                // シミュレーションを一時停止
                 if(state.isPlaying) pauseSimulation();
                 
-                // モーダルを表示
-                customSpeedInput.value = currentSpeedDaysPerSec; // 現在値をセット
-                customSpeedInput.classList.remove('border-red-500'); // エラー状態リセット
+                customSpeedInput.value = currentSpeedDaysPerSec; 
+                customSpeedInput.classList.remove('border-red-500'); 
                 speedModal.style.display = 'flex';
                 customSpeedInput.focus();
             } else if (valStr.startsWith('dynamic:')) {
-                // すでに作成されたカスタム値を選択した場合
                 currentSpeedDaysPerSec = parseFloat(valStr.split(':')[1]);
                 previousSpeedIndex = speedSelect.selectedIndex;
             } else {
@@ -943,7 +916,7 @@
 
         btnSpeedCancel.addEventListener('click', () => {
             speedModal.style.display = 'none';
-            speedSelect.selectedIndex = previousSpeedIndex; // 元の選択に戻す
+            speedSelect.selectedIndex = previousSpeedIndex; 
         });
 
         btnSpeedOk.addEventListener('click', () => {
@@ -951,33 +924,26 @@
             if (!isNaN(val) && val > 0) {
                 currentSpeedDaysPerSec = val;
                 
-                // 既存の動的オプションを探す
                 let dynamicOpt = speedSelect.querySelector('option.dynamic-speed');
                 if (!dynamicOpt) {
                     dynamicOpt = document.createElement('option');
                     dynamicOpt.className = 'dynamic-speed';
-                    // "カスタム..." の手前に挿入
                     speedSelect.insertBefore(dynamicOpt, speedSelect.lastElementChild);
                 }
                 
-                // 値を設定 (prefixをつけて "custom" と区別する)
                 dynamicOpt.value = `dynamic:${val}`;
                 dynamicOpt.text = `カスタム (1秒=${val}日)`;
-                dynamicOpt.selected = true; // これを選択状態にする
+                dynamicOpt.selected = true; 
                 
-                // 状態更新
                 previousSpeedIndex = speedSelect.selectedIndex;
                 speedModal.style.display = 'none';
             } else {
-                // エラー表示（赤枠）
                 customSpeedInput.classList.add('border-red-500');
             }
         });
 
 
-        // --- 地震追加ロジック ---
         function addQuakeToActiveList(quake) {
-            // 音を鳴らす（再生開始時などに初期化が必要）
             if (isSoundEnabled && audioCtx && audioCtx.state !== 'running') {
                 audioCtx.resume();
             }
@@ -997,7 +963,6 @@
             });
         }
 
-        // --- 描画ループ (Canvas) ---
         function drawCanvas() {
             if (!ctx || !canvasEl) return;
             ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
@@ -1005,7 +970,6 @@
             const topLeft = map.containerPointToLayerPoint([0, 0]);
             L.DomUtil.setPosition(canvasEl, topLeft);
 
-            // 世界の幅(ピクセル)を計算して、左右のコピー世界にも描画する
             const p1 = map.latLngToContainerPoint([0, -180]);
             const p2 = map.latLngToContainerPoint([0, 180]);
             const worldWidth = Math.abs(p2.x - p1.x);
@@ -1013,7 +977,6 @@
             const now = performance.now();
             const deadIndices = [];
 
-            // 描画ループ: 配列の先頭(古い)から末尾(新しい)の順に描画
             for (let i = 0; i < activeQuakes.length; i++) {
                 const q = activeQuakes[i];
                 const elapsed = now - q.startTime;
@@ -1025,27 +988,19 @@
 
                 const basePoint = map.latLngToContainerPoint(q.latLng);
 
-                // 世界の繰り返し表示に対応するため、左右のコピー分も含めて描画候補とする
-                // maxBoundsで制限しているため、無限ループではなく画面に見える範囲（主に±1周分）を描画
                 const offsets = [0];
                 if (worldWidth > 0) {
-                    // 左側の世界を追加
                     let w = worldWidth;
                     while (basePoint.x - w > -100) { offsets.push(-w); w += worldWidth; }
-                    
-                    // 右側の世界を追加
                     w = worldWidth;
                     while (basePoint.x + w < canvasEl.width + 100) { offsets.push(w); w += worldWidth; }
                 }
 
-                // 各オフセット（コピーされた世界）に対して描画を実行
                 offsets.forEach(offset => {
                     const point = { x: basePoint.x + offset, y: basePoint.y };
 
                     if (point.x < -100 || point.y < -100 || point.x > canvasEl.width + 100 || point.y > canvasEl.height + 100) return;
 
-                    // --- アニメーション ---
-                    // 波紋
                     const rippleDuration = 1000;
                     if (elapsed < rippleDuration) {
                         const rippleProgress = elapsed / rippleDuration;
@@ -1067,7 +1022,6 @@
                         ctx.fill(); 
                     }
 
-                    // 本体
                     let circleScale = 1;
                     let circleOpacity = 0.9;
 
@@ -1086,7 +1040,6 @@
                         ctx.arc(point.x, point.y, currentSize / 2, 0, Math.PI * 2);
                         ctx.globalAlpha = circleOpacity;
                         
-                        // 発光
                         if (q.data.style.glow) {
                             ctx.shadowBlur = (q.data.mag >= 8) ? 35 : 15;
                             ctx.shadowColor = q.data.style.glow;
@@ -1097,7 +1050,6 @@
                         ctx.fillStyle = q.data.style.fill;
                         ctx.fill();
 
-                        // 縁取り
                         if (q.data.style.strokeWidth > 0) {
                             ctx.shadowBlur = 0; 
                             ctx.lineWidth = q.data.style.strokeWidth;
@@ -1115,7 +1067,6 @@
             }
         }
 
-        // --- クリック判定 ---
         function handleMapClick(e) {
             if (!activeQuakes.length) return;
             const clickX = e.clientX;
@@ -1157,7 +1108,6 @@
         const slider = document.getElementById('time-slider');
         const quakeCountDisplay = document.getElementById('quake-count');
 
-        // スライダーの背景グラデーションを更新する関数
         function updateSliderStyle(percent) {
             slider.style.background = `linear-gradient(to right, #2563eb 0%, #2563eb ${percent}%, #cbd5e1 ${percent}%, #cbd5e1 100%)`;
         }
@@ -1170,7 +1120,6 @@
             
             if (!isDraggingSlider) {
                 const progress = (state.currentTime - START_DATE.getTime()) / TOTAL_DURATION_MS * 100;
-                // スライダーの値と背景色の両方を更新
                 const val = progress || 0;
                 slider.value = val;
                 updateSliderStyle(val);
@@ -1178,7 +1127,6 @@
             quakeCountDisplay.innerText = state.lastDataIndex;
         }
 
-        // --- メインループ ---
         let lastFrameTime = 0;
 
         function loop(timestamp) {
@@ -1187,9 +1135,7 @@
             lastFrameTime = timestamp;
 
             if (state.isPlaying && state.isReady) {
-                // 1日 = 24時間 = 86400秒
                 const simSecondsPerRealSec = currentSpeedDaysPerSec * 86400; 
-
                 const advanceMs = (simSecondsPerRealSec * 1000) * (deltaTime / 1000);
                 state.currentTime += advanceMs;
 
@@ -1221,7 +1167,6 @@
             }
         }
 
-        // --- 制御系 ---
         const btnPlayPause = document.getElementById('btn-play-pause');
         const btnReset = document.getElementById('btn-reset');
         let isDraggingSlider = false;
@@ -1233,8 +1178,6 @@
             btnPlayPause.classList.remove('bg-blue-600', 'hover:bg-blue-500');
             btnPlayPause.classList.add('bg-orange-600', 'hover:bg-orange-500');
             lastFrameTime = 0;
-            
-            // 再生開始時にオーディオコンテキストを初期化/再開
             initAudio();
         }
 
@@ -1257,7 +1200,7 @@
             if(ctx) ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
             updateDisplay();
             slider.value = 0;
-            updateSliderStyle(0); // リセット時も更新
+            updateSliderStyle(0); 
         });
 
         slider.addEventListener('mousedown', () => { isDraggingSlider = true; pauseSimulation(); });
@@ -1266,14 +1209,10 @@
             if (!state.isReady) return;
             const val = parseFloat(e.target.value);
             state.currentTime = START_DATE.getTime() + (TOTAL_DURATION_MS * (val / 100));
-            
-            // 手動ドラッグ時も色を更新
             updateSliderStyle(val);
-            
             state.lastDataIndex = 0;
             activeQuakes = [];
             if(ctx) ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-            
             for (let i = 0; i < earthquakeData.length; i++) {
                 if (earthquakeData[i].datetime.getTime() <= state.currentTime) {
                     state.lastDataIndex = i + 1;
@@ -1284,9 +1223,75 @@
             updateDisplay();
         });
         
-        // スライダー外で離してもドラッグ終了できるように document 全体で監視
         document.addEventListener('mouseup', () => { isDraggingSlider = false; });
         document.addEventListener('touchend', () => { isDraggingSlider = false; });
+
+        // --- パネルのリサイズ機能 ---
+        const infoPanelEl = document.getElementById('info-panel');
+        const resizeHandleEl = document.getElementById('resize-handle');
+        let isResizing = false;
+        let startWidth, startHeight, startX, startY;
+
+        // タッチイベント (スマホ用)
+        resizeHandleEl.addEventListener('touchstart', (e) => {
+            e.stopPropagation(); // 地図操作を防止
+            isResizing = true;
+            startWidth = infoPanelEl.offsetWidth;
+            startHeight = infoPanelEl.offsetHeight;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isResizing) return;
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            
+            const newWidth = startWidth + (currentX - startX);
+            const newHeight = startHeight + (currentY - startY);
+
+            // 制限 (崩れない範囲)
+            // min-width: 150px, max-width: 95vw
+            if (newWidth > 150 && newWidth < window.innerWidth * 0.95) {
+                infoPanelEl.style.width = newWidth + 'px';
+            }
+            // min-height: 80px, max-height: 300px
+            if (newHeight > 80 && newHeight < 300) {
+                infoPanelEl.style.height = newHeight + 'px';
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            isResizing = false;
+        });
+
+        // マウスイベント (PCデバッグ用など)
+        resizeHandleEl.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault(); // テキスト選択防止
+            isResizing = true;
+            startWidth = infoPanelEl.offsetWidth;
+            startHeight = infoPanelEl.offsetHeight;
+            startX = e.clientX;
+            startY = e.clientY;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const newWidth = startWidth + (e.clientX - startX);
+            const newHeight = startHeight + (e.clientY - startY);
+
+            if (newWidth > 150 && newWidth < window.innerWidth * 0.95) {
+                infoPanelEl.style.width = newWidth + 'px';
+            }
+            if (newHeight > 80 && newHeight < 300) {
+                infoPanelEl.style.height = newHeight + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+        });
 
         requestAnimationFrame(loop);
 
