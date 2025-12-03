@@ -535,6 +535,10 @@
         let isMagTextEnabled = true; // マグニチュード文字表示のON/OFF
         let textDisplayMode = 'sorted'; // 'sorted' (最前面・整列) or 'standard' (標準・埋没)
 
+        // ★追加: 音の間引き用タイムスタンプ
+        let lastSoundTimeM4 = 0;
+        let lastSoundTimeM5 = 0;
+
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -555,6 +559,19 @@
             if (!isSoundEnabled || !audioCtx) return;
             if (mag < 4.0) return; 
 
+            // ★追加: 高速再生時のノイズ防止（間引き処理）
+            const now = performance.now();
+            if (mag < 5.0) {
+                // M4クラス: 連続して鳴りすぎないように間引く (最小間隔 100ms)
+                if (now - lastSoundTimeM4 < 100) return;
+                lastSoundTimeM4 = now;
+            } else if (mag < 6.0) {
+                // M5クラス: 少し間引く (最小間隔 60ms)
+                if (now - lastSoundTimeM5 < 60) return;
+                lastSoundTimeM5 = now;
+            }
+            // M6以上は間引かない
+
             const t = audioCtx.currentTime;
             const intensity = Math.min(1, Math.max(0, (mag - 4.0) / 5.0));
             
@@ -563,29 +580,29 @@
             let filterFreq, filterQ, noiseVolBase, noiseDecay;
 
             if (currentSoundType === 'sharp') {
-                volumeBase = 0.02 + 0.98 * Math.pow(intensity, 3);
+                volumeBase = 0.001 + 0.95 * Math.pow(intensity, 5); 
                 volume = masterVolume * volumeBase;
-                startFreq = 300 + (intensity * 600);
-                endFreq = 20 + (intensity * 20);
-                oscDecay = 0.06; 
-                const ampDecay = 0.05 + (intensity * 0.15);
+                startFreq = 400 + (intensity * 600);
+                endFreq = 20;
+                oscDecay = 0.04; 
+                const ampDecay = 0.04 + (intensity * 0.15);
                 oscDur = ampDecay + 0.05;
-                filterFreq = 1000 + (intensity * 5000);
+                filterFreq = 1200 + (intensity * 5000);
                 filterQ = 1.0;
                 noiseVolBase = 1.0;
-                noiseDecay = 0.05 + (intensity * 0.2);
+                noiseDecay = 0.04 + (intensity * 0.2);
             } else {
-                volumeBase = 0.08 + 0.92 * Math.pow(intensity, 1.5);
+                volumeBase = 0.001 + 0.75 * Math.pow(intensity, 3); 
                 volume = masterVolume * volumeBase; 
-                startFreq = 280 + (intensity * 220);
-                endFreq = 50;
-                oscDecay = 0.1;
-                const ampDecay = 0.1 + (intensity * 0.2);
+                startFreq = 300 + (intensity * 250);
+                endFreq = 40;
+                oscDecay = 0.08; 
+                const ampDecay = 0.08 + (intensity * 0.3);
                 oscDur = ampDecay + 0.1;
-                filterFreq = 600 + (intensity * 1500);
+                filterFreq = 800 + (intensity * 1500);
                 filterQ = 1.0;
-                noiseVolBase = 0.8;
-                noiseDecay = 0.15 + (intensity * 0.25);
+                noiseVolBase = 0.7;
+                noiseDecay = 0.1 + (intensity * 0.3);
             }
 
             const osc = audioCtx.createOscillator();
@@ -671,6 +688,7 @@
             });
         });
 
+        // モード切替イベント
         textModeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
                 textDisplayMode = e.target.value;
