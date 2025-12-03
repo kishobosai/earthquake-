@@ -296,19 +296,10 @@
         </div>
     </div>
 
-    <!-- UI: タイトルと日時 (リサイズ機能削除) -->
-    <!-- 
-        変更点: 
-        - テキストサイズを text-sm, text-xl など小さめに設定(維持)
-        - リサイズハンドル削除
-        - max-w設定で画面からはみ出さないように
-        - whitespace-nowrap等で崩れ防止
-    -->
+    <!-- UI: タイトルと日時 (リサイズ機能削除・スマホ対応) -->
     <div class="absolute top-2 left-2 z-[1000] glass-panel p-2 sm:p-4 rounded-lg transition-opacity duration-500 opacity-0 max-w-[95vw] sm:max-w-sm" id="info-panel">
-        
         <h1 class="text-sm sm:text-xl font-bold mb-1 text-gray-800 truncate leading-tight whitespace-nowrap" id="sim-title">地震活動シミュレーション</h1>
         <p class="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-2 leading-tight whitespace-nowrap" id="sim-period">データを読み込んでください</p>
-        
         <div id="date-display" class="text-xl sm:text-3xl font-mono font-bold text-gray-800 tracking-wider leading-none mb-1 whitespace-nowrap">
             ----/--/--
         </div>
@@ -531,7 +522,7 @@
 
         // UI切り替えボタンの動作
         const btnToggleUi = document.getElementById('btn-toggle-ui');
-        const controlPanel = document.getElementById('control-panel'); // First declaration
+        
         
         btnToggleUi.addEventListener('click', () => {
             controlPanel.classList.toggle('opacity-0');
@@ -757,7 +748,7 @@
         const dropZone = document.getElementById('drop-zone');
         const infoPanel = document.getElementById('info-panel');
         const legendPanel = document.getElementById('legend-panel');
-        // Removed duplicated controlPanel variable declaration
+        const controlPanel = document.getElementById('control-panel');
         const btnReload = document.getElementById('btn-reload');
 
         function handleFile(file) {
@@ -821,9 +812,19 @@
             document.getElementById('btn-reset').disabled = false;
             document.getElementById('btn-play-pause').disabled = false;
 
-            const lats = data.map(d => d.lat);
-            const lngs = data.map(d => d.lng);
-            map.fitBounds([[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]], { padding: [50, 50], maxZoom: 9.0 });
+            // 修正箇所: 大量データ時のスタックオーバーフロー対策
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            
+            // ループで最大・最小を求める（...演算子は使わない）
+            for(let i = 0; i < data.length; i++) {
+                const d = data[i];
+                if(d.lat < minLat) minLat = d.lat;
+                if(d.lat > maxLat) maxLat = d.lat;
+                if(d.lng < minLng) minLng = d.lng;
+                if(d.lng > maxLng) maxLng = d.lng;
+            }
+            
+            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [50, 50], maxZoom: 9.0 });
 
             uploadOverlay.classList.add('hidden');
             infoPanel.classList.remove('opacity-0');
