@@ -11,8 +11,8 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts (Noto Sans JP) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Noto Sans JP, Roboto Mono for numbers) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
 
     <style>
         body {
@@ -178,6 +178,19 @@
         }
 
         input[type=range]:focus { outline: none; }
+
+        /* 左上パネルのシンプルモード用スタイル */
+        .simple-mode #sim-title,
+        .simple-mode #sim-period,
+        .simple-mode .quake-count-area {
+            display: none !important;
+        }
+        .simple-mode {
+            padding: 8px 12px !important;
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -189,25 +202,21 @@
         <div class="modal-content">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">利用規約</h2>
             <div class="text-sm space-y-4 text-gray-700 leading-relaxed">
-                
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第1条（適用）</h3>
                     <p>本規約は、[地震可視化シミュレーター]（以下「本サイト」といいます）の利用に関する、利用者と運営者との間の権利義務関係を定めることを目的とし、本サイトの利用に関わる一切の関係に適用されます。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第2条（本サイトのサービス内容）</h3>
                     <p>本サイトは、公的な機関（気象庁、USGSなど）が公表する地震情報、またはその他の公開データを基に、地図上での可視化、データ一覧表示、過去履歴の検索などのサービス（以下「本サービス」といいます）を提供します。</p>
                     <p>本サービスが提供する情報は、あくまでも情報提供を目的とするものであり、防災上の最終判断や、損害の予防・回避を保証するものではありません。</p>
                     <p>運営者は、本サービスの提供する情報について、その正確性、最新性、完全性、有用性について一切保証しません。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第3条（利用者の責任）</h3>
                     <p>利用者は、自己の責任において本サービスを利用するものとし、本サービスの利用が、すべての法令、規則等に適合することを保証するものとします。</p>
                     <p>利用者は、本サービスから得られた情報を、防災・減災対策の参考情報の一つとしてのみ利用し、情報の誤りや欠損による損害が発生する可能性があることを理解し、これに同意します。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第4条（禁止事項）</h3>
                     <p>利用者は、本サービスの利用にあたり、以下の行為を行ってはならないものとします。</p>
@@ -218,7 +227,6 @@
                         <li>その他、運営者が不適切と判断する行為。</li>
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第5条（サービスの停止・中断）</h3>
                     <p>運営者は、以下のいずれかの事由があると判断した場合、事前に利用者に通知することなく本サービスの全部または一部の提供を停止または中断することができるものとします。</p>
@@ -229,29 +237,24 @@
                     </ul>
                     <p>運営者は、本サービスの停止または中断により、利用者または第三者が被ったいかなる不利益または損害について、一切の責任を負わないものとします。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第6条（免責事項）</h3>
                     <p>運営者は、本サービスに起因して利用者に生じたあらゆる損害について、一切の責任を負いません。</p>
                     <p>運営者は、本サービスに関して、利用者と他の利用者または第三者との間において生じた取引、連絡または紛争等について、一切の責任を負いません。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第7条（著作権・知的財産権）</h3>
                     <p>本サイトのコンテンツ、デザイン、構造、その他すべての情報に関する著作権、商標権、その他一切の知的財産権は、運営者または運営者に利用を許諾した権利者に帰属します。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">第8条（準拠法および管轄裁判所）</h3>
                     <p>本規約の解釈にあたっては、日本法を準拠法とします。</p>
                     <p>本サービスに関して紛争が生じた場合には、東京地方裁判所を専属的合意管轄とします。</p>
                 </div>
-
                 <div class="pt-4 border-t border-gray-200">
                     <h3 class="font-bold text-gray-900">附則</h3>
                     <p>本規約は、[2025年12月3日]から施行します。</p>
                 </div>
-
             </div>
             <button onclick="document.getElementById('terms-modal').style.display = 'none'" class="mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-full transition w-full shadow">
                 閉じる
@@ -264,7 +267,6 @@
         <div class="modal-content">
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">プライバシーポリシー</h2>
             <div class="text-sm space-y-4 text-gray-700 leading-relaxed">
-                
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">1. 取得する情報</h3>
                     <p>本サイトは、利用者のプライバシーを尊重し、個人情報保護法に基づき適切な取り扱いを行います。本サイトで取得する情報には以下のものがあります。</p>
@@ -273,7 +275,6 @@
                         <li><strong>お問い合わせ時に入力いただく情報</strong><br>利用者からのお問い合わせの際に、氏名、メールアドレスなどの情報を取得する場合があります。</li>
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">2. 個人情報の利用目的</h3>
                     <p>利用者から取得した個人情報（氏名、メールアドレスなど）は、以下の目的で利用します。</p>
@@ -283,7 +284,6 @@
                         <li>上記の利用目的に付随する目的のため。</li>
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">3. 個人情報の第三者への開示・提供の禁止</h3>
                     <p>本サイトは、利用者よりお預かりした個人情報を適切に管理し、次のいずれかに該当する場合を除き、個人情報を第三者に開示または提供しません。</p>
@@ -293,29 +293,24 @@
                         <li>人の生命、身体または財産の保護のために必要であり、かつ本人の同意を得ることが困難である場合。</li>
                     </ul>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">4. アクセス解析ツールについて</h3>
                     <p>本サイトでは、利用状況の把握のためにGoogle Analyticsを利用しています。Google Analyticsは、クッキー（Cookie）を使用して利用者の情報を収集しますが、収集された情報はGoogle社のプライバシーポリシーに基づいて管理されます。</p>
                     <p>利用者は、ブラウザの設定を変更することでクッキーの利用を拒否することができます。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">5. 免責事項</h3>
                     <p>本サイトからリンクやバナーなどによって他のウェブサイトに移動した場合、移動先ウェブサイトで提供される情報、サービス等については、本サイトは一切の責任を負いません。</p>
                 </div>
-
                 <div>
                     <h3 class="font-bold text-gray-900 mb-1">6. お問い合わせ窓口</h3>
                     <p>本ポリシーに関するお問い合わせは、下記の窓口までお願いいたします。</p>
                     <a href="https://x.com/kisho_bousai" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">https://x.com/kisho_bousai</a>
                 </div>
-
                 <div class="pt-4 border-t border-gray-200">
                     <h3 class="font-bold text-gray-900">附則</h3>
                     <p>本プライバシーポリシーは、[2025年12月3日]から施行します。</p>
                 </div>
-
             </div>
             <button onclick="document.getElementById('privacy-modal').style.display = 'none'" class="mt-6 bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-full transition w-full shadow">
                 閉じる
@@ -323,7 +318,7 @@
         </div>
     </div>
 
-    <!-- 設定モーダル -->
+    <!-- 設定モーダル (文字表示モード選択 & パネルモード選択 追加) -->
     <div id="settings-modal">
         <div class="modal-content">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
@@ -365,6 +360,47 @@
                     </p>
                 </div>
 
+                <!-- マグニチュード文字表示設定 (モード選択付き) -->
+                <div>
+                    <h3 class="font-bold text-gray-600 mb-2 pt-2 border-t border-gray-200">マグニチュード表示設定</h3>
+                    <label class="flex items-center space-x-2 cursor-pointer mb-2">
+                        <input type="checkbox" id="text-enabled-check" class="form-checkbox h-5 w-5 text-blue-600" checked>
+                        <span>マグニチュード文字を表示する (M6.0以上)</span>
+                    </label>
+                    
+                    <div class="ml-7 flex flex-col space-y-2">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="text-mode" value="sorted" class="form-radio h-4 w-4 text-blue-600" checked>
+                            <span class="ml-2 text-xs text-gray-700">
+                                <b>最前面・整列 (Prioritize Large)</b><br>
+                                <span class="text-gray-500">Mが大きい順に手前に表示</span>
+                            </span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="text-mode" value="standard" class="form-radio h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-xs text-gray-700">
+                                <b>標準・埋没 (Standard)</b><br>
+                                <span class="text-gray-500">余震の円で文字が隠れる (余震の多さを優先)</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 情報パネル表示設定 (新設) -->
+                <div>
+                    <h3 class="font-bold text-gray-600 mb-2 pt-2 border-t border-gray-200">情報パネル表示</h3>
+                    <div class="flex flex-col space-y-2 ml-2">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="panel-mode" value="full" class="form-radio h-4 w-4 text-blue-600" checked>
+                            <span class="ml-2 text-xs text-gray-700"><b>詳細 (Full)</b> - タイトル・地震数あり</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="panel-mode" value="simple" class="form-radio h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-xs text-gray-700"><b>簡易 (Simple)</b> - 日時のみ</span>
+                        </label>
+                    </div>
+                </div>
+
             </div>
             <button onclick="document.getElementById('settings-modal').style.display = 'none'" class="mt-6 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-full transition w-full">
                 閉じる
@@ -403,7 +439,7 @@
         </div>
     </div>
 
-    <!-- UI: タイトルと日時 (リサイズ機能削除・スマホ対応) -->
+    <!-- UI: タイトルと日時 (ボタン削除・余白調整) -->
     <div class="absolute top-2 left-2 z-[1000] glass-panel p-2 sm:p-4 rounded-lg transition-opacity duration-500 opacity-0 max-w-[95vw] sm:max-w-sm" id="info-panel">
         <h1 class="text-sm sm:text-xl font-bold mb-1 text-gray-800 truncate leading-tight whitespace-nowrap" id="sim-title">地震活動シミュレーション</h1>
         <p class="text-[10px] sm:text-xs text-gray-500 mb-1 sm:mb-2 leading-tight whitespace-nowrap" id="sim-period">データを読み込んでください</p>
@@ -413,7 +449,7 @@
         <div id="time-display" class="text-base sm:text-xl font-mono text-gray-600 leading-none whitespace-nowrap">
             --:--
         </div>
-        <div class="mt-1 sm:mt-2 text-[10px] sm:text-sm text-gray-500 whitespace-nowrap">
+        <div class="mt-1 sm:mt-2 text-[10px] sm:text-sm text-gray-500 whitespace-nowrap quake-count-area">
             表示済地震数: <span id="quake-count">0</span> / <span id="total-count">0</span>
         </div>
     </div>
@@ -460,7 +496,6 @@
             </div>
         </div>
         <div class="mt-1 sm:mt-2 pt-1 sm:pt-2 border-t border-gray-300 flex flex-wrap justify-between items-center gap-2">
-            <!-- New location for Terms/Privacy -->
             <div class="flex gap-3">
                 <button id="btn-terms" onclick="document.getElementById('terms-modal').style.display = 'flex'" class="text-[10px] sm:text-xs text-gray-500 hover:text-blue-600 underline">
                     利用規約
@@ -497,6 +532,8 @@
         let isSoundEnabled = false; 
         let masterVolume = 0.5; 
         let currentSoundType = 'power'; 
+        let isMagTextEnabled = true; // マグニチュード文字表示のON/OFF
+        let textDisplayMode = 'sorted'; // 'sorted' (最前面・整列) or 'standard' (標準・埋没)
 
         function initAudio() {
             if (!audioCtx) {
@@ -593,11 +630,14 @@
         }
 
         const soundCheck = document.getElementById('sound-enabled-check');
+        const textCheck = document.getElementById('text-enabled-check'); 
         const volumeArea = document.getElementById('volume-control-area');
         const volumeSlider = document.getElementById('volume-slider');
         const volumeDisplay = document.getElementById('volume-display');
         const soundTypeArea = document.getElementById('sound-type-area');
         const soundTypeRadios = document.querySelectorAll('input[name="sound-type"]');
+        const textModeRadios = document.querySelectorAll('input[name="text-mode"]'); 
+        const panelModeRadios = document.querySelectorAll('input[name="panel-mode"]'); // パネルモード切替
 
         soundCheck.addEventListener('change', (e) => {
             isSoundEnabled = e.target.checked;
@@ -609,6 +649,13 @@
             } else {
                 volumeArea.classList.add('opacity-50');
                 soundTypeArea.classList.add('opacity-50');
+            }
+        });
+
+        textCheck.addEventListener('change', (e) => {
+            isMagTextEnabled = e.target.checked;
+            if (!state.isPlaying && activeQuakes.length > 0) {
+                drawCanvas(); 
             }
         });
 
@@ -624,9 +671,29 @@
             });
         });
 
+        textModeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                textDisplayMode = e.target.value;
+                if (!state.isPlaying && activeQuakes.length > 0) {
+                    drawCanvas();
+                }
+            });
+        });
+
+        const infoPanelEl = document.getElementById('info-panel');
+        panelModeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'simple') {
+                    infoPanelEl.classList.add('simple-mode');
+                } else {
+                    infoPanelEl.classList.remove('simple-mode');
+                }
+            });
+        });
+
         // UI切り替えボタンの動作
         const btnToggleUi = document.getElementById('btn-toggle-ui');
-        // const controlPanel = document.getElementById('control-panel'); // 重複していたのでコメントアウトしました
+        const controlPanel = document.getElementById('control-panel');
         
         btnToggleUi.addEventListener('click', () => {
             controlPanel.classList.toggle('opacity-0');
@@ -636,6 +703,13 @@
                 btnToggleUi.innerText = '🛠️';
             } else {
                 btnToggleUi.innerText = '✖️'; 
+            }
+        });
+
+        // 可視性変更時のイベント (タブ切り替えなどで停止)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && state.isPlaying) {
+                pauseSimulation();
             }
         });
 
@@ -850,9 +924,9 @@
 
         const uploadOverlay = document.getElementById('upload-overlay');
         const dropZone = document.getElementById('drop-zone');
-        const infoPanel = document.getElementById('info-panel');
+        // const infoPanel = document.getElementById('info-panel'); // 重複定義防止のため削除
         const legendPanel = document.getElementById('legend-panel');
-        const controlPanel = document.getElementById('control-panel');
+        // const controlPanel = document.getElementById('control-panel'); // 重複定義防止のため削除
         const btnReload = document.getElementById('btn-reload');
 
         function handleFile(file) {
@@ -931,7 +1005,7 @@
             map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [50, 50], maxZoom: 9.0 });
 
             uploadOverlay.classList.add('hidden');
-            infoPanel.classList.remove('opacity-0');
+            infoPanelEl.classList.remove('opacity-0'); // use infoPanelEl instead of infoPanel
             controlPanel.classList.remove('opacity-0');
             legendPanel.classList.remove('opacity-0');
 
@@ -1022,7 +1096,15 @@
             if (quake.mag < 1) return;
 
             const duration = 1300; 
-            const sizeBase = Math.max(10, Math.pow(1.7, quake.mag) * 2.5);
+            
+            // --- サイズ計算の調整 ---
+            // M6未満（文字が出ない地震）の円を少し小さくして、画面の混雑を緩和
+            let sizeFactor = 2.5;
+            if (quake.mag < 6.0) {
+                sizeFactor = 1.8; // M4〜M5などは少し小さく係数を下げる
+            }
+            // 最小サイズも 10 -> 8 に少し縮小
+            const sizeBase = Math.max(8, Math.pow(1.7, quake.mag) * sizeFactor);
 
             activeQuakes.push({
                 data: quake,
@@ -1031,6 +1113,48 @@
                 sizeBase: sizeBase,
                 latLng: L.latLng(quake.lat, quake.lng)
             });
+        }
+
+        // 文字描画ロジックの共通化関数
+        function drawMagText(ctx, mag, x, y, size, opacity) {
+            // フォントサイズ: 円に合わせて大きくするが、最小10px、最大60px程度に制限
+            const fontSize = Math.min(Math.max(11, size * 0.4), 60);
+            
+            ctx.font = `900 ${fontSize}px "Roboto Mono", "Helvetica", "Arial", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let textColor = '#ffffff';
+            let strokeColor = 'rgba(0, 0, 0, 0.7)';
+            let strokeW = 3;
+
+            if (mag >= 9.0) {
+                textColor = '#f50057';
+                strokeColor = '#000000';
+                strokeW = 5;
+            } else if (mag >= 8.0) {
+                textColor = '#ff0000';
+                strokeColor = '#212121';
+                strokeW = 4;
+            } else if (mag >= 7.0) {
+                textColor = '#ffea00';
+                strokeColor = 'rgba(0, 0, 0, 0.8)';
+                strokeW = 3;
+            } else {
+                textColor = '#ffffff';
+                strokeColor = 'rgba(0, 0, 0, 0.6)';
+                strokeW = 2.5;
+            }
+
+            ctx.globalAlpha = opacity;
+
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = strokeW;
+            ctx.strokeStyle = strokeColor;
+            ctx.strokeText(mag.toFixed(1), x, y);
+
+            ctx.fillStyle = textColor;
+            ctx.fillText(mag.toFixed(1), x, y);
         }
 
         function drawCanvas() {
@@ -1046,6 +1170,9 @@
 
             const now = performance.now();
             const deadIndices = [];
+            
+            // 最前面表示モード用キュー
+            const textDrawQueue = [];
 
             for (let i = 0; i < activeQuakes.length; i++) {
                 const q = activeQuakes[i];
@@ -1127,9 +1254,39 @@
                             ctx.stroke();
                         }
                         ctx.shadowBlur = 0; 
+
+                        // 文字描画情報をキューに追加（設定がONの場合のみ）
+                        if (isMagTextEnabled && q.data.mag >= 6.0) {
+                            if (textDisplayMode === 'standard') {
+                                // 標準モード: その場で描画 (隠れる)
+                                drawMagText(ctx, q.data.mag, point.x, point.y, currentSize, circleOpacity);
+                            } else {
+                                // 最前面モード: キューに追加
+                                textDrawQueue.push({
+                                    mag: q.data.mag,
+                                    x: point.x, 
+                                    y: point.y, 
+                                    size: currentSize, 
+                                    opacity: circleOpacity
+                                });
+                            }
+                        }
                     }
                 });
             }
+
+            // 文字をまとめて最前面に描画 (マグニチュード昇順にソート)
+            if (textDisplayMode === 'sorted' && textDrawQueue.length > 0) {
+                ctx.shadowBlur = 0;
+                
+                // Mが小さい順に描画することで、大きいMが後から描画され（手前に来て）重なり負けしない
+                textDrawQueue.sort((a, b) => a.mag - b.mag);
+
+                textDrawQueue.forEach(item => {
+                    drawMagText(ctx, item.mag, item.x, item.y, item.size, item.opacity);
+                });
+            }
+
             ctx.globalAlpha = 1.0;
 
             for (let i = deadIndices.length - 1; i >= 0; i--) {
