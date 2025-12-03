@@ -580,7 +580,12 @@
             let filterFreq, filterQ, noiseVolBase, noiseDecay;
 
             if (currentSoundType === 'sharp') {
-                volumeBase = 0.001 + 0.95 * Math.pow(intensity, 5); 
+                // M7以上は抑えめ(0.8)、M6クラスのみブーストする
+                volumeBase = 0.001 + 0.8 * Math.pow(intensity, 5); 
+                if (mag >= 6.0 && mag < 7.0) {
+                    volumeBase *= 2.2; // M6だけ持ち上げる
+                }
+                
                 volume = masterVolume * volumeBase;
                 startFreq = 400 + (intensity * 600);
                 endFreq = 20;
@@ -592,7 +597,12 @@
                 noiseVolBase = 1.0;
                 noiseDecay = 0.04 + (intensity * 0.2);
             } else {
-                volumeBase = 0.001 + 0.75 * Math.pow(intensity, 3); 
+                // Powerモード
+                volumeBase = 0.001 + 0.6 * Math.pow(intensity, 3); 
+                if (mag >= 6.0 && mag < 7.0) {
+                    volumeBase *= 1.8; // M6だけ持ち上げる
+                }
+
                 volume = masterVolume * volumeBase; 
                 startFreq = 300 + (intensity * 250);
                 endFreq = 40;
